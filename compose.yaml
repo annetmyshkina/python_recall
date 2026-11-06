@@ -1,0 +1,53 @@
+name: python-recall
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-python_recall}
+      POSTGRES_USER: ${POSTGRES_USER:-python_recall}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-python_recall}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    environment:
+      APP_ENV: development
+      APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
+      APP_NEW_CARDS_PER_DAY: ${APP_NEW_CARDS_PER_DAY:-20}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-python_recall}:${POSTGRES_PASSWORD:-python_recall}@postgres:5432/${POSTGRES_DB:-python_recall}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: ${DOCKER_SUBNET:-172.30.250.0/24}

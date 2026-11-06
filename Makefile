@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help sync lock lock-check lint format format-check openapi-check test check
+.PHONY: help sync lock lock-check run lint format format-check openapi-check test test-cov check compose-config compose-up compose-down compose-logs
 
 help: ## Показать доступные команды
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "%-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -13,6 +13,9 @@ lock: ## Обновить uv.lock
 
 lock-check: ## Проверить актуальность uv.lock
 	uv lock --check
+
+run: ## Запустить Backend в режиме разработки
+	uv run uvicorn backend.app.main:app --reload
 
 lint: ## Запустить Ruff linter
 	uv run ruff check .
@@ -29,4 +32,19 @@ openapi-check: ## Проверить OpenAPI-контракт
 test: ## Запустить тесты
 	uv run pytest
 
+test-cov: ## Запустить тесты с отчётом покрытия Backend
+	uv run pytest --cov=backend/app --cov-report=term-missing
+
 check: lock-check lint format-check openapi-check test ## Выполнить все проверки
+
+compose-config: ## Проверить Docker Compose конфигурацию
+	docker compose config --quiet
+
+compose-up: ## Собрать и запустить Backend и PostgreSQL
+	docker compose up --build --detach --wait --wait-timeout 60
+
+compose-down: ## Остановить контейнеры без удаления данных
+	docker compose down
+
+compose-logs: ## Смотреть логи контейнеров
+	docker compose logs --follow
