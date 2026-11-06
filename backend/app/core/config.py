@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     app_new_cards_per_day: int = Field(default=20, ge=1, le=100)
     api_v1_prefix: str = "/api/v1"
     database_url: str = (
-        "postgresql+psycopg://python_recall:python_recall@localhost:5432/python_recall"
+        "postgresql+psycopg://python_recall:python_recall@localhost:5433/python_recall"
     )
 
     @field_validator("app_timezone")

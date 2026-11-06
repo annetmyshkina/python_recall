@@ -15,6 +15,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
+COPY alembic.ini ./
 COPY backend ./backend
 
 RUN useradd --create-home --uid 10001 appuser \
@@ -24,4 +25,4 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["uv", "run", "--no-sync", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uv run --no-sync alembic upgrade head && exec uv run --no-sync uvicorn backend.app.main:app --host 0.0.0.0 --port 8000"]

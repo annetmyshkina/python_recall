@@ -21,6 +21,7 @@ make run
 После запуска доступны:
 
 - liveness: <http://localhost:8000/api/v1/health>;
+- готовность PostgreSQL: <http://localhost:8000/api/v1/health/database>;
 - Swagger UI: <http://localhost:8000/docs>;
 - ReDoc: <http://localhost:8000/redoc>.
 
@@ -34,7 +35,8 @@ make compose-up
 Compose запускает PostgreSQL 17 и Backend. Данные PostgreSQL сохраняются в
 именованном volume `python-recall_postgres_data`. PostgreSQL доступен с хоста
 на `127.0.0.1:5433`, чтобы не конфликтовать с локальной БД на стандартном
-порту `5432`.
+порту `5432`. Перед запуском Uvicorn контейнер Backend автоматически применяет
+миграции Alembic.
 
 Для сети проекта используется подсеть `172.30.250.0/24`. Явная подсеть
 позволяет Docker Compose работать при включённом VPN, который занимает все
@@ -55,6 +57,8 @@ make run            Запустить Backend с auto-reload
 make test           Запустить тесты
 make check          Выполнить все проверки
 make openapi-check  Проверить проектный OpenAPI-контракт
+make migrate        Применить миграции Alembic к настроенной БД
+make migration-check Проверить соответствие БД ORM-моделям
 make compose-config Проверить итоговую Compose-конфигурацию
 make compose-up     Собрать и запустить контейнеры
 make compose-down   Остановить контейнеры
@@ -69,6 +73,6 @@ make compose-logs   Смотреть логи контейнеров
 - [OpenAPI 3.1](docs/openapi.yaml)
 - [ADR](docs/adr/)
 
-Проект пока находится на этапе инициализации. Реализован только независимый от
-БД liveness endpoint. Модели, миграции и database health check будут добавлены
-следующим этапом.
+В проекте реализованы core-модели Release 1, первая миграция Alembic, независимый
+liveness endpoint и отдельная проверка доступности PostgreSQL. Прикладные CRUD и
+Review Engine добавляются следующими этапами.

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help sync lock lock-check run lint format format-check openapi-check test test-cov check compose-config compose-up compose-down compose-logs
+.PHONY: help sync lock lock-check run lint format format-check openapi-check migration-sql-check migrate migration-check test test-cov check compose-config compose-up compose-down compose-logs
 
 help: ## Показать доступные команды
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "%-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -29,13 +29,22 @@ format-check: ## Проверить форматирование Python-файл
 openapi-check: ## Проверить OpenAPI-контракт
 	uv run python scripts/validate_openapi.py
 
+migration-sql-check: ## Проверить генерацию SQL всех миграций без подключения к БД
+	uv run alembic upgrade head --sql > /dev/null
+
+migrate: ## Применить миграции к настроенной БД
+	uv run alembic upgrade head
+
+migration-check: ## Проверить, что схема БД соответствует ORM-моделям
+	uv run alembic check
+
 test: ## Запустить тесты
 	uv run pytest
 
 test-cov: ## Запустить тесты с отчётом покрытия Backend
 	uv run pytest --cov=backend/app --cov-report=term-missing
 
-check: lock-check lint format-check openapi-check test ## Выполнить все проверки
+check: lock-check lint format-check openapi-check migration-sql-check test ## Выполнить все проверки
 
 compose-config: ## Проверить Docker Compose конфигурацию
 	docker compose config --quiet
