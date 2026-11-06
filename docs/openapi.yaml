@@ -1,0 +1,1817 @@
+openapi: 3.1.0
+info:
+  title: Python Recall API
+  version: 0.1.0
+  description: REST API Release 1 for the local Python Recall learning system.
+servers:
+  - url: /api/v1
+    description: Local API v1
+tags:
+  - name: Categories
+  - name: Topics
+  - name: Tags
+  - name: Cards
+  - name: Reviews
+  - name: Statistics
+  - name: Health
+
+paths:
+  /categories:
+    get:
+      tags: [Categories]
+      operationId: list_categories
+      summary: List categories
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Paginated categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+    post:
+      tags: [Categories]
+      operationId: create_category
+      summary: Create a category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryCreate"
+      responses:
+        "201":
+          description: Category created
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /categories/{category_id}:
+    parameters:
+      - $ref: "#/components/parameters/CategoryId"
+    get:
+      tags: [Categories]
+      operationId: get_category
+      summary: Get a category
+      responses:
+        "200":
+          description: Category found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+    patch:
+      tags: [Categories]
+      operationId: update_category
+      summary: Update a category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryPatch"
+      responses:
+        "200":
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+    delete:
+      tags: [Categories]
+      operationId: delete_category
+      summary: Delete an empty category
+      responses:
+        "204":
+          description: Category deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /topics:
+    get:
+      tags: [Topics]
+      operationId: list_topics
+      summary: List topics
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: category_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Paginated topics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+    post:
+      tags: [Topics]
+      operationId: create_topic
+      summary: Create a topic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TopicCreate"
+      responses:
+        "201":
+          description: Topic created
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Topic"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /topics/{topic_id}:
+    parameters:
+      - $ref: "#/components/parameters/TopicId"
+    get:
+      tags: [Topics]
+      operationId: get_topic
+      summary: Get a topic
+      responses:
+        "200":
+          description: Topic found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Topic"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+    patch:
+      tags: [Topics]
+      operationId: update_topic
+      summary: Update or move a topic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TopicPatch"
+      responses:
+        "200":
+          description: Topic updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Topic"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+    delete:
+      tags: [Topics]
+      operationId: delete_topic
+      summary: Delete an empty topic
+      responses:
+        "204":
+          description: Topic deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /tags:
+    get:
+      tags: [Tags]
+      operationId: list_tags
+      summary: List tags
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Paginated tags
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TagPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+    post:
+      tags: [Tags]
+      operationId: create_tag
+      summary: Create a tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagCreate"
+      responses:
+        "201":
+          description: Tag created
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /tags/{tag_id}:
+    parameters:
+      - $ref: "#/components/parameters/TagId"
+    get:
+      tags: [Tags]
+      operationId: get_tag
+      summary: Get a tag
+      responses:
+        "200":
+          description: Tag found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+    patch:
+      tags: [Tags]
+      operationId: update_tag
+      summary: Rename a tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagPatch"
+      responses:
+        "200":
+          description: Tag updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+    delete:
+      tags: [Tags]
+      operationId: delete_tag
+      summary: Delete a tag
+      responses:
+        "204":
+          description: Tag deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /cards:
+    get:
+      tags: [Cards]
+      operationId: list_cards
+      summary: Search and list cards
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: topic_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: category_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: tag
+          in: query
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 50
+        - name: difficulty
+          in: query
+          schema:
+            $ref: "#/components/schemas/Difficulty"
+        - name: search
+          in: query
+          schema:
+            type: string
+            maxLength: 200
+        - name: is_archived
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Paginated cards
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+    post:
+      tags: [Cards]
+      operationId: create_card
+      summary: Create a card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardCreate"
+      responses:
+        "201":
+          description: Card created
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /cards/{card_id}:
+    parameters:
+      - $ref: "#/components/parameters/CardId"
+    get:
+      tags: [Cards]
+      operationId: get_card
+      summary: Get a card
+      responses:
+        "200":
+          description: Card found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+    patch:
+      tags: [Cards]
+      operationId: update_card
+      summary: Update, move, archive, or restore a card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardPatch"
+      responses:
+        "200":
+          description: Card updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+    delete:
+      tags: [Cards]
+      operationId: delete_card
+      summary: Delete a card without learning history
+      responses:
+        "204":
+          description: Card deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /reviews/due:
+    get:
+      tags: [Reviews]
+      operationId: list_due_cards
+      summary: List cards currently available for review
+      parameters:
+        - name: topic_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: category_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: include_new
+          in: query
+          schema:
+            type: boolean
+            default: true
+        - $ref: "#/components/parameters/ReviewLimit"
+      responses:
+        "200":
+          description: Due and eligible new cards
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DueCards"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /reviews/session:
+    post:
+      tags: [Reviews]
+      operationId: build_review_session
+      summary: Build a non-persistent review queue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionRequest"
+      responses:
+        "200":
+          description: Generated queue snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /reviews/{card_id}/reference:
+    parameters:
+      - $ref: "#/components/parameters/CardId"
+    get:
+      tags: [Reviews]
+      operationId: get_review_reference
+      summary: Reveal the reference answer
+      responses:
+        "200":
+          description: Reference answer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewReference"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /reviews/{card_id}/attempts:
+    parameters:
+      - $ref: "#/components/parameters/CardId"
+    post:
+      tags: [Reviews]
+      operationId: create_answer_attempt
+      summary: Save a user answer without changing SM-2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnswerAttemptCreate"
+      responses:
+        "201":
+          description: Answer attempt saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnswerAttempt"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /reviews/{card_id}/complete:
+    parameters:
+      - $ref: "#/components/parameters/CardId"
+    post:
+      tags: [Reviews]
+      operationId: complete_review
+      summary: Apply a user-confirmed rating to SM-2
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewComplete"
+      responses:
+        "201":
+          description: Review completed for the first time
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResult"
+        "200":
+          description: Previously saved result replayed
+          headers:
+            Idempotency-Replayed:
+              description: Always true for a replayed result.
+              required: true
+              schema:
+                type: boolean
+                const: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResult"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /reviews/history:
+    get:
+      tags: [Reviews]
+      operationId: list_review_history
+      summary: List immutable review history
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: card_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: topic_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: rating
+          in: query
+          schema:
+            $ref: "#/components/schemas/Rating"
+        - name: reviewed_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: reviewed_to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Paginated review history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewHistoryPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /statistics/overview:
+    get:
+      tags: [Statistics]
+      operationId: get_statistics_overview
+      summary: Get overall learning statistics
+      responses:
+        "200":
+          description: Overall statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatisticsOverview"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /statistics/topics:
+    get:
+      tags: [Statistics]
+      operationId: list_topic_statistics
+      summary: List statistics by topic
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: category_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Paginated topic statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicStatisticsPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /statistics/activity:
+    get:
+      tags: [Statistics]
+      operationId: get_statistics_activity
+      summary: Get daily review activity
+      parameters:
+        - name: date_from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Daily activity in the configured learning timezone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityStatistics"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /health:
+    get:
+      tags: [Health]
+      operationId: get_health
+      summary: Check Backend liveness without dependencies
+      responses:
+        "200":
+          description: Backend process is alive
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+
+  /health/database:
+    get:
+      tags: [Health]
+      operationId: get_database_health
+      summary: Check PostgreSQL availability
+      responses:
+        "200":
+          description: PostgreSQL is available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatabaseHealth"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+components:
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    ReviewLimit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    CategoryId:
+      name: category_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TopicId:
+      name: topic_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TagId:
+      name: tag_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CardId:
+      name: card_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Client-generated UUID unique to one review completion intent.
+      schema:
+        type: string
+        format: uuid
+
+  headers:
+    Location:
+      description: Relative path of the created resource.
+      required: true
+      schema:
+        type: string
+
+  responses:
+    BadRequest:
+      description: Malformed request syntax or JSON
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    Conflict:
+      description: Domain state or uniqueness conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    InternalError:
+      description: Unexpected server error
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    DatabaseUnavailable:
+      description: PostgreSQL is unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+
+  schemas:
+    Pagination:
+      type: object
+      additionalProperties: false
+      required: [page, limit, total, pages]
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+        pages:
+          type: integer
+          minimum: 0
+
+    ProblemField:
+      type: object
+      additionalProperties: false
+      required: [field, code, message]
+      properties:
+        field:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+
+    ProblemDetails:
+      type: object
+      additionalProperties: false
+      required: [type, title, status, detail, instance, code, trace_id, errors]
+      properties:
+        type:
+          type: string
+          examples: ["urn:python-recall:error:validation-error"]
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+        code:
+          type: string
+        trace_id:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProblemField"
+
+    Category:
+      type: object
+      additionalProperties: false
+      required: [id, name, description, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: [string, "null"]
+          maxLength: 5000
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    CategoryCreate:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: [string, "null"]
+          maxLength: 5000
+          default: null
+
+    CategoryPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: [string, "null"]
+          maxLength: 5000
+
+    CategoryPage:
+      type: object
+      additionalProperties: false
+      required: [items, pagination]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    Topic:
+      type: object
+      additionalProperties: false
+      required: [id, category_id, name, description, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        category_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: [string, "null"]
+          maxLength: 5000
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    TopicCreate:
+      type: object
+      additionalProperties: false
+      required: [category_id, name]
+      properties:
+        category_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: [string, "null"]
+          maxLength: 5000
+          default: null
+
+    TopicPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        category_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: [string, "null"]
+          maxLength: 5000
+
+    TopicPage:
+      type: object
+      additionalProperties: false
+      required: [items, pagination]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Topic"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    Tag:
+      type: object
+      additionalProperties: false
+      required: [id, name, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    TagCreate:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+
+    TagPatch:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+
+    TagPage:
+      type: object
+      additionalProperties: false
+      required: [items, pagination]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    Difficulty:
+      type: string
+      enum: [beginner, intermediate, advanced]
+
+    EaseFactor:
+      type: string
+      pattern: "^[0-9]+\\.[0-9]{2}$"
+      examples: ["2.50"]
+
+    Card:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - topic_id
+        - question
+        - answer
+        - explanation
+        - code_example
+        - difficulty
+        - is_archived
+        - tags
+        - repetitions
+        - interval_days
+        - ease_factor
+        - next_review_at
+        - last_reviewed_at
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        topic_id:
+          type: string
+          format: uuid
+        question:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        answer:
+          type: string
+          minLength: 1
+          maxLength: 50000
+        explanation:
+          type: [string, "null"]
+          maxLength: 50000
+        code_example:
+          type: [string, "null"]
+          maxLength: 50000
+        difficulty:
+          $ref: "#/components/schemas/Difficulty"
+        is_archived:
+          type: boolean
+        tags:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/Tag"
+        repetitions:
+          type: integer
+          minimum: 0
+          readOnly: true
+        interval_days:
+          type: integer
+          minimum: 0
+          readOnly: true
+        ease_factor:
+          $ref: "#/components/schemas/EaseFactor"
+          readOnly: true
+        next_review_at:
+          type: [string, "null"]
+          format: date-time
+          readOnly: true
+        last_reviewed_at:
+          type: [string, "null"]
+          format: date-time
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    CardCreate:
+      type: object
+      additionalProperties: false
+      required: [topic_id, question, answer, difficulty]
+      properties:
+        topic_id:
+          type: string
+          format: uuid
+        question:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        answer:
+          type: string
+          minLength: 1
+          maxLength: 50000
+        explanation:
+          type: [string, "null"]
+          maxLength: 50000
+          default: null
+        code_example:
+          type: [string, "null"]
+          maxLength: 50000
+          default: null
+        difficulty:
+          $ref: "#/components/schemas/Difficulty"
+        tag_ids:
+          type: array
+          maxItems: 50
+          uniqueItems: true
+          default: []
+          items:
+            type: string
+            format: uuid
+
+    CardPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        topic_id:
+          type: string
+          format: uuid
+        question:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        answer:
+          type: string
+          minLength: 1
+          maxLength: 50000
+        explanation:
+          type: [string, "null"]
+          maxLength: 50000
+        code_example:
+          type: [string, "null"]
+          maxLength: 50000
+        difficulty:
+          $ref: "#/components/schemas/Difficulty"
+        is_archived:
+          type: boolean
+        tag_ids:
+          type: array
+          maxItems: 50
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+
+    CardPage:
+      type: object
+      additionalProperties: false
+      required: [items, pagination]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Card"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    ReviewCard:
+      type: object
+      additionalProperties: false
+      required:
+        [id, topic_id, question, difficulty, tags, repetitions, is_new, next_review_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        topic_id:
+          type: string
+          format: uuid
+        question:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        difficulty:
+          $ref: "#/components/schemas/Difficulty"
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+        repetitions:
+          type: integer
+          minimum: 0
+        is_new:
+          type: boolean
+        next_review_at:
+          type: [string, "null"]
+          format: date-time
+
+    DueCards:
+      type: object
+      additionalProperties: false
+      required:
+        [items, due_count, new_count, new_remaining_today, timezone, generated_at]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewCard"
+        due_count:
+          type: integer
+          minimum: 0
+        new_count:
+          type: integer
+          minimum: 0
+        new_remaining_today:
+          type: integer
+          minimum: 0
+        timezone:
+          type: string
+          examples: [Europe/Kirov]
+        generated_at:
+          type: string
+          format: date-time
+
+    DueSessionRequest:
+      type: object
+      additionalProperties: false
+      required: [mode]
+      properties:
+        mode:
+          type: string
+          const: due
+        include_new:
+          type: boolean
+          default: true
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+
+    TopicSessionRequest:
+      type: object
+      additionalProperties: false
+      required: [mode, topic_id]
+      properties:
+        mode:
+          type: string
+          const: topic
+        topic_id:
+          type: string
+          format: uuid
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+
+    DifficultSessionRequest:
+      type: object
+      additionalProperties: false
+      required: [mode]
+      properties:
+        mode:
+          type: string
+          const: difficult
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+
+    ManualSessionRequest:
+      type: object
+      additionalProperties: false
+      required: [mode, card_ids]
+      properties:
+        mode:
+          type: string
+          const: manual
+        card_ids:
+          type: array
+          minItems: 1
+          maxItems: 100
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+
+    SessionRequest:
+      oneOf:
+        - $ref: "#/components/schemas/DueSessionRequest"
+        - $ref: "#/components/schemas/TopicSessionRequest"
+        - $ref: "#/components/schemas/DifficultSessionRequest"
+        - $ref: "#/components/schemas/ManualSessionRequest"
+      discriminator:
+        propertyName: mode
+        mapping:
+          due: "#/components/schemas/DueSessionRequest"
+          topic: "#/components/schemas/TopicSessionRequest"
+          difficult: "#/components/schemas/DifficultSessionRequest"
+          manual: "#/components/schemas/ManualSessionRequest"
+
+    SessionMode:
+      type: string
+      enum: [due, topic, difficult, manual]
+
+    SessionResponse:
+      type: object
+      additionalProperties: false
+      required: [mode, generated_at, timezone, items, total]
+      properties:
+        mode:
+          $ref: "#/components/schemas/SessionMode"
+        generated_at:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewCard"
+        total:
+          type: integer
+          minimum: 0
+
+    ReviewReference:
+      type: object
+      additionalProperties: false
+      required: [card_id, answer, explanation, code_example]
+      properties:
+        card_id:
+          type: string
+          format: uuid
+        answer:
+          type: string
+          minLength: 1
+          maxLength: 50000
+        explanation:
+          type: [string, "null"]
+          maxLength: 50000
+        code_example:
+          type: [string, "null"]
+          maxLength: 50000
+
+    AnswerAttemptCreate:
+      type: object
+      additionalProperties: false
+      required: [user_answer]
+      properties:
+        user_answer:
+          type: string
+          minLength: 1
+          maxLength: 50000
+
+    AnswerAttempt:
+      type: object
+      additionalProperties: false
+      required: [id, card_id, user_answer, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        card_id:
+          type: string
+          format: uuid
+          readOnly: true
+        user_answer:
+          type: string
+          minLength: 1
+          maxLength: 50000
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    Rating:
+      type: string
+      enum: [again, hard, good, easy]
+
+    ReviewComplete:
+      type: object
+      additionalProperties: false
+      required: [rating]
+      properties:
+        rating:
+          $ref: "#/components/schemas/Rating"
+        attempt_id:
+          type: [string, "null"]
+          format: uuid
+          default: null
+
+    ReviewState:
+      type: object
+      additionalProperties: false
+      required: [repetitions, interval_days, ease_factor, next_review_at]
+      properties:
+        repetitions:
+          type: integer
+          minimum: 0
+        interval_days:
+          type: integer
+          minimum: 0
+        ease_factor:
+          $ref: "#/components/schemas/EaseFactor"
+        next_review_at:
+          type: [string, "null"]
+          format: date-time
+
+    ReviewResult:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - card_id
+        - attempt_id
+        - rating
+        - quality
+        - reviewed_at
+        - previous_state
+        - new_state
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        card_id:
+          type: string
+          format: uuid
+          readOnly: true
+        attempt_id:
+          type: [string, "null"]
+          format: uuid
+          readOnly: true
+        rating:
+          $ref: "#/components/schemas/Rating"
+        quality:
+          type: integer
+          enum: [1, 3, 4, 5]
+          readOnly: true
+        reviewed_at:
+          type: string
+          format: date-time
+          readOnly: true
+        previous_state:
+          $ref: "#/components/schemas/ReviewState"
+        new_state:
+          $ref: "#/components/schemas/ReviewState"
+
+    ReviewHistoryPage:
+      type: object
+      additionalProperties: false
+      required: [items, pagination]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewResult"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    SuccessRate:
+      type: [number, "null"]
+      minimum: 0
+      maximum: 1
+
+    StatisticsOverview:
+      type: object
+      additionalProperties: false
+      required:
+        - total_cards
+        - active_cards
+        - archived_cards
+        - due_cards
+        - new_cards
+        - reviews_today
+        - success_rate_30d
+        - timezone
+        - generated_at
+      properties:
+        total_cards:
+          type: integer
+          minimum: 0
+        active_cards:
+          type: integer
+          minimum: 0
+        archived_cards:
+          type: integer
+          minimum: 0
+        due_cards:
+          type: integer
+          minimum: 0
+        new_cards:
+          type: integer
+          minimum: 0
+        reviews_today:
+          type: integer
+          minimum: 0
+        success_rate_30d:
+          $ref: "#/components/schemas/SuccessRate"
+        timezone:
+          type: string
+        generated_at:
+          type: string
+          format: date-time
+
+    TopicStatistics:
+      type: object
+      additionalProperties: false
+      required:
+        - topic
+        - total_cards
+        - active_cards
+        - due_cards
+        - new_cards
+        - reviews_30d
+        - success_rate_30d
+      properties:
+        topic:
+          $ref: "#/components/schemas/Topic"
+        total_cards:
+          type: integer
+          minimum: 0
+        active_cards:
+          type: integer
+          minimum: 0
+        due_cards:
+          type: integer
+          minimum: 0
+        new_cards:
+          type: integer
+          minimum: 0
+        reviews_30d:
+          type: integer
+          minimum: 0
+        success_rate_30d:
+          $ref: "#/components/schemas/SuccessRate"
+
+    TopicStatisticsPage:
+      type: object
+      additionalProperties: false
+      required: [items, pagination]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopicStatistics"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    ActivityDay:
+      type: object
+      additionalProperties: false
+      required: [date, reviews, successful_reviews, success_rate]
+      properties:
+        date:
+          type: string
+          format: date
+        reviews:
+          type: integer
+          minimum: 0
+        successful_reviews:
+          type: integer
+          minimum: 0
+        success_rate:
+          $ref: "#/components/schemas/SuccessRate"
+
+    ActivityStatistics:
+      type: object
+      additionalProperties: false
+      required: [timezone, items]
+      properties:
+        timezone:
+          type: string
+        items:
+          type: array
+          maxItems: 366
+          items:
+            $ref: "#/components/schemas/ActivityDay"
+
+    Health:
+      type: object
+      additionalProperties: false
+      required: [status, service, version]
+      properties:
+        status:
+          type: string
+          const: ok
+        service:
+          type: string
+          const: python-recall-backend
+        version:
+          type: string
+
+    DatabaseHealth:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          const: ok

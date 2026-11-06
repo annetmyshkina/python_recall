@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help sync lock lock-check lint format format-check test check
+.PHONY: help sync lock lock-check lint format format-check openapi-check test check
 
 help: ## Показать доступные команды
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "%-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -23,8 +23,10 @@ format: ## Отформатировать Python-файлы
 format-check: ## Проверить форматирование Python-файлов
 	uv run ruff format --check .
 
+openapi-check: ## Проверить OpenAPI-контракт
+	uv run python scripts/validate_openapi.py
+
 test: ## Запустить тесты
 	uv run pytest
 
-check: lock-check lint format-check test ## Выполнить все проверки
-
+check: lock-check lint format-check openapi-check test ## Выполнить все проверки
