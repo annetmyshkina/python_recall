@@ -1,0 +1,37 @@
+[project]
+name = "python-recall"
+version = "0.1.0"
+description = "Personal AI-assisted learning system for Python"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic",
+    "fastapi",
+    "httpx",
+    "psycopg[binary]",
+    "pydantic",
+    "pydantic-settings",
+    "sqlalchemy",
+    "uvicorn[standard]",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "ruff",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers"
+testpaths = ["backend/tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
