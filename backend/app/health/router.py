@@ -1,16 +1,11 @@
-from uuid import uuid4
-
-from fastapi import APIRouter, Request, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, status
 from sqlalchemy.exc import SQLAlchemyError
 
 from backend.app.core.config import Settings
 from backend.app.core.database import Database
-from backend.app.health.schemas import (
-    DatabaseHealthResponse,
-    HealthResponse,
-    ProblemDetails,
-)
+from backend.app.core.exceptions import database_unavailable
+from backend.app.core.schemas import ProblemDetails
+from backend.app.health.schemas import DatabaseHealthResponse, HealthResponse
 
 
 def build_health_router(settings: Settings, database: Database) -> APIRouter:
@@ -44,27 +39,11 @@ def build_health_router(settings: Settings, database: Database) -> APIRouter:
         status_code=status.HTTP_200_OK,
         summary="Check PostgreSQL availability",
     )
-    async def get_database_health(
-        request: Request,
-    ) -> DatabaseHealthResponse | JSONResponse:
+    async def get_database_health() -> DatabaseHealthResponse:
         try:
             database.check_connection()
-        except SQLAlchemyError:
-            problem = ProblemDetails(
-                type="urn:python-recall:error:database-unavailable",
-                title="Database unavailable",
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="PostgreSQL is temporarily unavailable.",
-                instance=request.url.path,
-                code="database_unavailable",
-                trace_id=uuid4().hex,
-                errors=[],
-            )
-            return JSONResponse(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                content=problem.model_dump(mode="json"),
-                media_type="application/problem+json",
-            )
+        except SQLAlchemyError as error:
+            raise database_unavailable() from error
 
         return DatabaseHealthResponse(status="ok")
 

@@ -23,7 +23,7 @@ from backend.app.core.models import TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from backend.app.reviews.models import AnswerAttempt, ReviewLog
-    from backend.app.tags.models import CardTag
+    from backend.app.tags.models import CardTag, Tag
     from backend.app.topics.models import Topic
 
 
@@ -132,3 +132,11 @@ class Card(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="card",
         passive_deletes=True,
     )
+
+    @property
+    def tags(self) -> list["Tag"]:
+        """Expose associated tags in deterministic API order."""
+        return sorted(
+            (link.tag for link in self.tag_links),
+            key=lambda tag: (tag.name.casefold(), str(tag.id)),
+        )

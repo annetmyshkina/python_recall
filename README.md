@@ -59,6 +59,7 @@ make check          Выполнить все проверки
 make openapi-check  Проверить проектный OpenAPI-контракт
 make migrate        Применить миграции Alembic к настроенной БД
 make migration-check Проверить соответствие БД ORM-моделям
+make smoke-crud     Проверить CRUD на запущенном Backend
 make compose-config Проверить итоговую Compose-конфигурацию
 make compose-up     Собрать и запустить контейнеры
 make compose-down   Остановить контейнеры
@@ -73,6 +74,6 @@ make compose-logs   Смотреть логи контейнеров
 - [OpenAPI 3.1](docs/openapi.yaml)
 - [ADR](docs/adr/)
 
-В проекте реализованы core-модели Release 1, первая миграция Alembic, независимый
-liveness endpoint и отдельная проверка доступности PostgreSQL. Прикладные CRUD и
-Review Engine добавляются следующими этапами.
+В проекте реализованы core-модели Release 1, миграции Alembic, CRUD категорий,
+тем, тегов и карточек, а также отдельные проверки Backend и PostgreSQL. Review
+Engine добавляется следующим этапом.

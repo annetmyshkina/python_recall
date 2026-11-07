@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from backend.app.api.router import build_api_router
 from backend.app.core.config import Settings, get_settings
 from backend.app.core.database import Database
+from backend.app.core.error_handlers import install_exception_handlers
 
 
 def create_app(
@@ -31,6 +32,7 @@ def create_app(
         lifespan=lifespan,
     )
     application.state.database = resolved_database
+    install_exception_handlers(application)
     application.include_router(
         build_api_router(resolved_settings, resolved_database),
         prefix=resolved_settings.api_v1_prefix,

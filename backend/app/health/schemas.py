@@ -1,36 +1,17 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from backend.app.core.schemas import ApiSchema
 
 
-class HealthResponse(BaseModel):
+class HealthResponse(ApiSchema):
     """Dependency-free Backend liveness response."""
-
-    model_config = ConfigDict(extra="forbid")
 
     status: Literal["ok"]
     service: str
     version: str
 
 
-class DatabaseHealthResponse(BaseModel):
+class DatabaseHealthResponse(ApiSchema):
     """Successful database readiness response."""
 
-    model_config = ConfigDict(extra="forbid")
-
     status: Literal["ok"]
-
-
-class ProblemDetails(BaseModel):
-    """RFC 9457-style stable error envelope fixed by the API contract."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    type: str
-    title: str
-    status: int
-    detail: str
-    instance: str
-    code: str
-    trace_id: str
-    errors: list[dict[str, str]]
