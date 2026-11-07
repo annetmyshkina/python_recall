@@ -2,7 +2,10 @@ from datetime import UTC, datetime
 
 import pytest
 
-from backend.app.reviews.algorithms.calendar import calculate_next_review_at
+from backend.app.reviews.algorithms.calendar import (
+    calculate_next_review_at,
+    local_day_bounds,
+)
 
 
 def test_next_review_uses_start_of_next_local_day() -> None:
@@ -33,6 +36,20 @@ def test_skipped_local_date_moves_to_first_valid_instant() -> None:
 def test_naive_review_time_is_rejected() -> None:
     with pytest.raises(ValueError, match="UTC offset"):
         calculate_next_review_at(datetime(2026, 1, 1), 1, "UTC")
+
+
+def test_local_day_bounds_are_returned_as_utc_instants() -> None:
+    start, end = local_day_bounds(
+        datetime(2026, 11, 7, 12, 0, tzinfo=UTC), "Europe/Kirov"
+    )
+
+    assert start == datetime(2026, 11, 6, 21, 0, tzinfo=UTC)
+    assert end == datetime(2026, 11, 7, 21, 0, tzinfo=UTC)
+
+
+def test_local_day_bounds_reject_naive_instant() -> None:
+    with pytest.raises(ValueError, match="UTC offset"):
+        local_day_bounds(datetime(2026, 11, 7), "UTC")
 
 
 @pytest.mark.parametrize("interval", [0, -1, 1.5, True])

@@ -44,3 +44,17 @@ def calculate_next_review_at(
     local_date = reviewed_at.astimezone(timezone).date()
     target_date = local_date + timedelta(days=interval_days)
     return _first_valid_instant(target_date, timezone)
+
+
+def local_day_bounds(
+    instant: datetime, timezone_name: str
+) -> tuple[datetime, datetime]:
+    """Return the half-open UTC interval for the instant's local calendar day."""
+    if instant.tzinfo is None or instant.utcoffset() is None:
+        raise ValueError("instant must include a UTC offset")
+    timezone = ZoneInfo(timezone_name)
+    local_date = instant.astimezone(timezone).date()
+    return (
+        _first_valid_instant(local_date, timezone),
+        _first_valid_instant(local_date + timedelta(days=1), timezone),
+    )

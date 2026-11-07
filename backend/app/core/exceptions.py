@@ -48,3 +48,30 @@ def database_unavailable() -> ApiError:
         title="Database unavailable",
         detail="PostgreSQL is temporarily unavailable.",
     )
+
+
+def card_archived() -> ApiError:
+    return ApiError(
+        status_code=409,
+        code="card_archived",
+        title="Card is archived",
+        detail="Archived card cannot be used for learning operations.",
+    )
+
+
+def idempotency_conflict() -> ApiError:
+    return ApiError(
+        status_code=409,
+        code="idempotency_conflict",
+        title="Idempotency conflict",
+        detail="Idempotency key was already used for a different request.",
+    )
+
+
+def review_conflict(detail: str) -> ApiError:
+    return ApiError(
+        status_code=409,
+        code="review_conflict",
+        title="Review conflict",
+        detail=detail,
+    )
