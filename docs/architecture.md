@@ -13,7 +13,8 @@
 Архитектура опирается на следующие решения:
 
 - [ADR-001](adr/ADR-001-review-algorithm.md) — алгоритм повторений;
-- [ADR-002](adr/ADR-002-entity-lifecycle.md) — жизненный цикл сущностей.
+- [ADR-002](adr/ADR-002-entity-lifecycle.md) — жизненный цикл сущностей;
+- [ADR-003](adr/ADR-003-frontend-architecture.md) — архитектура Frontend.
 
 ## Архитектурные границы
 

@@ -91,6 +91,7 @@ make smoke-reviews
 - [Архитектура](docs/architecture.md)
 - [REST API](docs/api.md)
 - [OpenAPI 3.1](docs/openapi.yaml)
+- [План Release 2](docs/release-2-plan.md)
 - [ADR](docs/adr/)
 
 В проекте реализованы core-модели Release 1, миграции Alembic, CRUD категорий,
