@@ -1,10 +1,13 @@
 import { AppRoutes } from "./app/router";
+import { AppErrorBoundary } from "./app/AppErrorBoundary";
 import { AppShell } from "./components/layout/AppShell";
 
 export function App() {
   return (
-    <AppShell>
-      <AppRoutes />
-    </AppShell>
+    <AppErrorBoundary>
+      <AppShell>
+        <AppRoutes />
+      </AppShell>
+    </AppErrorBoundary>
   );
 }
