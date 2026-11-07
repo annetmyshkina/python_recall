@@ -1,7 +1,9 @@
 """Exercise the Review API against a running Backend and PostgreSQL."""
 
 import os
+from datetime import datetime
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
 import httpx
 from sqlalchemy import delete, select
@@ -162,7 +164,40 @@ def main() -> None:
             )
             assert history["pagination"]["total"] == 1
             assert history["items"][0]["id"] == completed["id"]
-            print("Review smoke check passed.")
+
+            overview = expect(client.get("/statistics/overview"), 200)
+            assert overview["total_cards"] >= 1
+            assert overview["reviews_today"] >= 1
+
+            topics = expect(
+                client.get(
+                    "/statistics/topics",
+                    params={"category_id": str(created["category"])},
+                ),
+                200,
+            )
+            assert topics["pagination"]["total"] == 1
+            assert topics["items"][0]["total_cards"] == 1
+            assert topics["items"][0]["reviews_30d"] == 1
+            assert topics["items"][0]["success_rate_30d"] == 1.0
+
+            reviewed_at = datetime.fromisoformat(str(completed["reviewed_at"]))
+            local_date = reviewed_at.astimezone(
+                ZoneInfo(get_settings().app_timezone)
+            ).date()
+            activity = expect(
+                client.get(
+                    "/statistics/activity",
+                    params={
+                        "date_from": local_date.isoformat(),
+                        "date_to": local_date.isoformat(),
+                    },
+                ),
+                200,
+            )
+            assert activity["items"][0]["reviews"] >= 1
+            assert activity["items"][0]["successful_reviews"] >= 1
+            print("Review and statistics smoke check passed.")
     finally:
         cleanup(created)
 

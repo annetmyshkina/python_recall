@@ -58,3 +58,18 @@ def local_day_bounds(
         _first_valid_instant(local_date, timezone),
         _first_valid_instant(local_date + timedelta(days=1), timezone),
     )
+
+
+def local_date_range_bounds(
+    date_from: date,
+    date_to: date,
+    timezone_name: str,
+) -> tuple[datetime, datetime]:
+    """Return UTC bounds for an inclusive range of local calendar dates."""
+    if date_from > date_to:
+        raise ValueError("date_from must not be after date_to")
+    timezone = ZoneInfo(timezone_name)
+    return (
+        _first_valid_instant(date_from, timezone),
+        _first_valid_instant(date_to + timedelta(days=1), timezone),
+    )

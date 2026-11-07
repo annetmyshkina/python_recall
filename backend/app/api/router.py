@@ -7,6 +7,7 @@ from backend.app.core.config import Settings
 from backend.app.core.database import Database
 from backend.app.health.router import build_health_router
 from backend.app.reviews.router import build_review_router
+from backend.app.statistics.router import build_statistics_router
 from backend.app.tags.router import router as tags_router
 from backend.app.topics.router import router as topics_router
 
@@ -19,5 +20,6 @@ def build_api_router(settings: Settings, database: Database) -> APIRouter:
     router.include_router(tags_router)
     router.include_router(cards_router)
     router.include_router(build_review_router(settings))
+    router.include_router(build_statistics_router(settings))
     router.include_router(build_health_router(settings, database))
     return router

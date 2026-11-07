@@ -2,6 +2,7 @@
 
 from backend.app.reviews.algorithms.calendar import (
     calculate_next_review_at,
+    local_date_range_bounds,
     local_day_bounds,
 )
 from backend.app.reviews.algorithms.sm2 import (
@@ -16,6 +17,7 @@ __all__ = [
     "ReviewState",
     "calculate_next_review_at",
     "calculate_sm2",
+    "local_date_range_bounds",
     "local_day_bounds",
     "quality_for_rating",
 ]

@@ -75,3 +75,12 @@ def review_conflict(detail: str) -> ApiError:
         title="Review conflict",
         detail=detail,
     )
+
+
+def invalid_date_range(detail: str) -> ApiError:
+    return ApiError(
+        status_code=422,
+        code="validation_error",
+        title="Validation error",
+        detail=detail,
+    )

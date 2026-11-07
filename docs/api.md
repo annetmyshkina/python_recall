@@ -585,6 +585,9 @@ Idempotency-Replayed: true
 ```
 
 Доля возвращается от `0` до `1`; при отсутствии повторений — `null`.
+`due_cards` и `new_cards` учитывают только активные карточки. Окно `30d`
+включает текущую локальную дату и 29 предыдущих дат до `generated_at`;
+исторические повторения архивных карточек остаются в расчёте успешности.
 
 `GET /statistics/topics` поддерживает `category_id`, `page`, `limit`. Каждый item
 содержит Topic, `total_cards`, `active_cards`, `due_cards`, `new_cards`,

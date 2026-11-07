@@ -1,9 +1,10 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 
 from backend.app.reviews.algorithms.calendar import (
     calculate_next_review_at,
+    local_date_range_bounds,
     local_day_bounds,
 )
 
@@ -50,6 +51,20 @@ def test_local_day_bounds_are_returned_as_utc_instants() -> None:
 def test_local_day_bounds_reject_naive_instant() -> None:
     with pytest.raises(ValueError, match="UTC offset"):
         local_day_bounds(datetime(2026, 11, 7), "UTC")
+
+
+def test_local_date_range_bounds_include_both_local_dates() -> None:
+    start, end = local_date_range_bounds(
+        date(2026, 11, 6), date(2026, 11, 7), "Europe/Kirov"
+    )
+
+    assert start == datetime(2026, 11, 5, 21, 0, tzinfo=UTC)
+    assert end == datetime(2026, 11, 7, 21, 0, tzinfo=UTC)
+
+
+def test_local_date_range_rejects_reversed_dates() -> None:
+    with pytest.raises(ValueError, match="date_from"):
+        local_date_range_bounds(date(2026, 11, 7), date(2026, 11, 6), "UTC")
 
 
 @pytest.mark.parametrize("interval", [0, -1, 1.5, True])
