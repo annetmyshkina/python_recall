@@ -7,6 +7,7 @@ AI-наставником.
 
 - Python 3.12 или новее;
 - [uv](https://docs.astral.sh/uv/);
+- Node.js 22.13 или новее и npm;
 - Docker с Docker Compose для PostgreSQL и контейнерного запуска Backend;
 - GNU Make для коротких команд разработки.
 
@@ -66,6 +67,37 @@ make compose-config Проверить итоговую Compose-конфигур
 make compose-up     Собрать и запустить контейнеры
 make compose-down   Остановить контейнеры
 make compose-logs   Смотреть логи контейнеров
+```
+
+## Frontend
+
+Frontend находится в `frontend/` и использует отдельный npm lock-файл. При
+изменении `package.json` зависимости и lock-файл обновляются командой:
+
+```bash
+make frontend-sync
+```
+
+После появления `package-lock.json` воспроизводимая установка выполняется так:
+
+```bash
+make frontend-install
+```
+
+Для локальной разработки сначала запустите Backend на порту `8000`, затем в
+другом терминале запустите Vite:
+
+```bash
+make run
+make frontend-run
+```
+
+Vite откроет приложение на <http://localhost:5173> и будет проксировать запросы
+`/api` в Backend. Полная проверка Frontend включает актуальность OpenAPI-типов,
+TypeScript, ESLint, тесты и production build:
+
+```bash
+make frontend-check
 ```
 
 ## Итоговая проверка Release 1
