@@ -1,6 +1,5 @@
 from datetime import datetime
 from decimal import Decimal
-from enum import StrEnum
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -21,18 +20,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.core.database import Base
 from backend.app.core.models import CreatedAtMixin, UUIDPrimaryKeyMixin
+from backend.app.reviews.algorithms.sm2 import ReviewRating
 
 if TYPE_CHECKING:
     from backend.app.cards.models import Card
-
-
-class ReviewRating(StrEnum):
-    """Learner-confirmed review rating."""
-
-    AGAIN = "again"
-    HARD = "hard"
-    GOOD = "good"
-    EASY = "easy"
 
 
 class AnswerAttempt(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
