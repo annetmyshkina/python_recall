@@ -56,6 +56,7 @@ make sync           Установить зависимости через uv
 make run            Запустить Backend с auto-reload
 make test           Запустить тесты
 make check          Выполнить все проверки
+make release-check  Выполнить итоговую проверку Release 1 с покрытием
 make openapi-check  Проверить проектный OpenAPI-контракт
 make migrate        Применить миграции Alembic к настроенной БД
 make migration-check Проверить соответствие БД ORM-моделям
@@ -65,6 +66,23 @@ make compose-config Проверить итоговую Compose-конфигур
 make compose-up     Собрать и запустить контейнеры
 make compose-down   Остановить контейнеры
 make compose-logs   Смотреть логи контейнеров
+```
+
+## Итоговая проверка Release 1
+
+Статические проверки и тесты с минимальным покрытием 90%:
+
+```bash
+make release-check
+```
+
+Интеграционная проверка на PostgreSQL:
+
+```bash
+make compose-up
+make migration-check
+make smoke-crud
+make smoke-reviews
 ```
 
 ## Документация

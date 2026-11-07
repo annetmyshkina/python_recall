@@ -131,6 +131,76 @@ def iter_operations(
                 yield path, method, operation
 
 
+def operation_parameters(
+    document: dict[str, Any], path: str, method: str
+) -> set[tuple[str, str, bool]]:
+    """Return the externally relevant parameter signature of one operation."""
+    path_item = document["paths"][path]
+    parameters = path_item.get("parameters", []) + path_item[method].get(
+        "parameters", []
+    )
+    resolved = [
+        resolve_local_ref(document, parameter["$ref"])
+        if "$ref" in parameter
+        else parameter
+        for parameter in parameters
+    ]
+    return {
+        (parameter["name"], parameter["in"], parameter.get("required") is True)
+        for parameter in resolved
+    }
+
+
+def validate_runtime_contract(document: dict[str, Any]) -> None:
+    """Ensure FastAPI registers the design-first operation inventory."""
+    from backend.app.core.config import Settings
+    from backend.app.main import create_app
+
+    application = create_app(Settings(_env_file=None))
+    try:
+        runtime = application.openapi()
+    finally:
+        application.state.database.dispose()
+
+    prefix = document["servers"][0]["url"]
+    expected = {
+        (path, method): operation["operationId"]
+        for path, method, operation in iter_operations(document)
+    }
+    actual: dict[tuple[str, str], str] = {}
+    runtime_paths: dict[tuple[str, str], str] = {}
+    for path, method, operation in iter_operations(runtime):
+        assert path.startswith(prefix), f"runtime path is outside {prefix}: {path}"
+        contract_path = path.removeprefix(prefix)
+        actual[(contract_path, method)] = operation["operationId"]
+        runtime_paths[(contract_path, method)] = path
+
+    assert actual == expected, "runtime operation inventory differs from OpenAPI"
+    for (path, method), _ in expected.items():
+        runtime_path = runtime_paths[(path, method)]
+        assert operation_parameters(document, path, method) == operation_parameters(
+            runtime, runtime_path, method
+        ), f"runtime parameter mismatch: {method} {path}"
+        expected_body = document["paths"][path][method].get("requestBody")
+        runtime_body = runtime["paths"][runtime_path][method].get("requestBody")
+        assert bool(expected_body) == bool(runtime_body), (
+            f"runtime request body mismatch: {method} {path}"
+        )
+        expected_success = {
+            code
+            for code in document["paths"][path][method]["responses"]
+            if code.startswith("2")
+        }
+        runtime_success = {
+            code
+            for code in runtime["paths"][runtime_path][method]["responses"]
+            if code.startswith("2")
+        }
+        assert runtime_success <= expected_success, (
+            f"runtime success response mismatch: {method} {path}"
+        )
+
+
 def validate() -> tuple[int, int, int]:
     """Validate syntax, OpenAPI structure, and project-specific invariants."""
     document = load_yaml(OPENAPI_PATH.read_text(encoding="utf-8"))
@@ -205,6 +275,7 @@ def validate() -> tuple[int, int, int]:
 
     problem_responses = {
         "BadRequest",
+        "PayloadTooLarge",
         "NotFound",
         "Conflict",
         "ValidationError",
@@ -222,10 +293,16 @@ def validate() -> tuple[int, int, int]:
         assert "503" in responses, f"503 response is missing: {method} {path}"
         if "422" in responses:
             assert "400" in responses, f"400 response is missing: {method} {path}"
+        if "requestBody" in operation:
+            assert responses.get("413") == {
+                "$ref": "#/components/responses/PayloadTooLarge"
+            }, f"413 response is missing: {method} {path}"
 
     api_documentation = API_DOC_PATH.read_text(encoding="utf-8")
     for path, _ in EXPECTED_OPERATIONS:
         assert path in api_documentation, f"path is missing from api.md: {path}"
+
+    validate_runtime_contract(document)
 
     return (
         len(operations),

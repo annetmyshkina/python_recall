@@ -63,6 +63,8 @@ paths:
           $ref: "#/components/responses/Conflict"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "422":
           $ref: "#/components/responses/ValidationError"
         "500":
@@ -113,6 +115,8 @@ paths:
           $ref: "#/components/responses/Conflict"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "422":
           $ref: "#/components/responses/ValidationError"
         "500":
@@ -190,6 +194,8 @@ paths:
           $ref: "#/components/responses/Conflict"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "422":
           $ref: "#/components/responses/ValidationError"
         "500":
@@ -240,6 +246,8 @@ paths:
           $ref: "#/components/responses/Conflict"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "422":
           $ref: "#/components/responses/ValidationError"
         "500":
@@ -309,6 +317,8 @@ paths:
           $ref: "#/components/responses/Conflict"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "422":
           $ref: "#/components/responses/ValidationError"
         "500":
@@ -359,6 +369,8 @@ paths:
           $ref: "#/components/responses/Conflict"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "422":
           $ref: "#/components/responses/ValidationError"
         "500":
@@ -456,6 +468,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "422":
           $ref: "#/components/responses/ValidationError"
         "500":
@@ -504,6 +518,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "422":
           $ref: "#/components/responses/ValidationError"
         "500":
@@ -586,6 +602,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "422":
           $ref: "#/components/responses/ValidationError"
         "500":
@@ -642,6 +660,8 @@ paths:
           $ref: "#/components/responses/Conflict"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "422":
           $ref: "#/components/responses/ValidationError"
         "500":
@@ -690,6 +710,8 @@ paths:
           $ref: "#/components/responses/Conflict"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "422":
           $ref: "#/components/responses/ValidationError"
         "500":
@@ -928,6 +950,12 @@ components:
   responses:
     BadRequest:
       description: Malformed request syntax or JSON
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    PayloadTooLarge:
+      description: JSON request body exceeds 1 MiB
       content:
         application/problem+json:
           schema:

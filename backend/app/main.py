@@ -7,6 +7,7 @@ from backend.app.api.router import build_api_router
 from backend.app.core.config import Settings, get_settings
 from backend.app.core.database import Database
 from backend.app.core.error_handlers import install_exception_handlers
+from backend.app.core.middleware import JsonBodyLimitMiddleware
 
 
 def create_app(
@@ -32,6 +33,7 @@ def create_app(
         lifespan=lifespan,
     )
     application.state.database = resolved_database
+    application.add_middleware(JsonBodyLimitMiddleware)
     install_exception_handlers(application)
     application.include_router(
         build_api_router(resolved_settings, resolved_database),

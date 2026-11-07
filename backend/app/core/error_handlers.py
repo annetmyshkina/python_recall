@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend.app.core.exceptions import ApiError, database_unavailable
 from backend.app.core.schemas import ProblemDetails, ProblemField
@@ -92,6 +93,34 @@ def install_exception_handlers(application: FastAPI) -> None:
             code=error.code,
             title=error.title,
             detail=error.detail,
+        )
+
+    @application.exception_handler(StarletteHTTPException)
+    async def handle_http_error(
+        request: Request, error: StarletteHTTPException
+    ) -> JSONResponse:
+        if error.status_code == 404:
+            return problem_response(
+                request,
+                status_code=404,
+                code="resource_not_found",
+                title="Resource not found",
+                detail="Requested API endpoint was not found.",
+            )
+        if error.status_code == 405:
+            return problem_response(
+                request,
+                status_code=405,
+                code="method_not_allowed",
+                title="Method not allowed",
+                detail="HTTP method is not supported for this endpoint.",
+            )
+        return problem_response(
+            request,
+            status_code=error.status_code,
+            code="http_error",
+            title="HTTP error",
+            detail="The HTTP request could not be processed.",
         )
 
     @application.exception_handler(Exception)

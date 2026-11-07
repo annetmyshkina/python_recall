@@ -21,6 +21,19 @@ def main() -> None:
 
     with httpx.Client(base_url=BASE_URL, timeout=10) as client:
         try:
+            missing = client.get("/not-an-endpoint")
+            assert missing.status_code == 404
+            assert missing.headers["content-type"] == "application/problem+json"
+            assert missing.json()["code"] == "resource_not_found"
+
+            oversized = client.post(
+                "/categories",
+                content=b'{"name":"' + b"x" * (1024 * 1024) + b'"}',
+                headers={"content-type": "application/json"},
+            )
+            assert oversized.status_code == 413
+            assert oversized.json()["code"] == "request_too_large"
+
             category = expect(
                 client.post("/categories", json={"name": f"Smoke {suffix}"}),
                 201,
