@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 
 import { CardsPage } from "../features/cards/CardsPage";
+import { CardFormPage } from "../features/cards/CardFormPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { NotFoundPage } from "../features/errors/NotFoundPage";
 import { ReviewPage } from "../features/reviews/ReviewPage";
@@ -11,6 +12,8 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<DashboardPage />} />
+      <Route path="/cards/new" element={<CardFormPage />} />
+      <Route path="/cards/:cardId/edit" element={<CardFormPage />} />
       <Route path="/cards" element={<CardsPage />} />
       <Route path="/topics" element={<TopicsPage />} />
       <Route path="/review" element={<ReviewPage />} />

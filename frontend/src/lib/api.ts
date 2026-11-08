@@ -113,6 +113,16 @@ export function getApiErrorMessage(error: unknown) {
   return "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
 }
 
+export function getApiFieldError(error: unknown, fieldName: string) {
+  if (!(error instanceof ApiError)) {
+    return undefined;
+  }
+
+  return error.problem.errors.find((item) =>
+    item.field.split(".").includes(fieldName),
+  )?.message;
+}
+
 export async function apiRequest<T>(
   path: string,
   { body, headers, query, ...init }: ApiRequestOptions = {},
