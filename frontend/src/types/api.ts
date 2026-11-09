@@ -21,6 +21,16 @@ export type CardPatch = components["schemas"]["CardPatch"];
 export type CardPage = components["schemas"]["CardPage"];
 export type Difficulty = components["schemas"]["Difficulty"];
 
+export type ReviewCard = components["schemas"]["ReviewCard"];
+export type SessionRequest = components["schemas"]["SessionRequest"];
+export type SessionResponse = components["schemas"]["SessionResponse"];
+export type ReviewReference = components["schemas"]["ReviewReference"];
+export type AnswerAttempt = components["schemas"]["AnswerAttempt"];
+export type AnswerAttemptCreate = components["schemas"]["AnswerAttemptCreate"];
+export type Rating = components["schemas"]["Rating"];
+export type ReviewComplete = components["schemas"]["ReviewComplete"];
+export type ReviewResult = components["schemas"]["ReviewResult"];
+
 export type CategoryListParams = NonNullable<
   operations["list_categories"]["parameters"]["query"]
 >;
