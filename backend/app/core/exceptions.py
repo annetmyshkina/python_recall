@@ -54,8 +54,8 @@ def ai_provider_unavailable() -> ApiError:
     return ApiError(
         status_code=503,
         code="ai_provider_unavailable",
-        title="AI provider unavailable",
-        detail="The configured AI provider is temporarily unavailable.",
+        title="ИИ-провайдер недоступен",
+        detail="Настроенный ИИ-провайдер временно недоступен.",
     )
 
 
@@ -63,8 +63,44 @@ def ai_model_missing() -> ApiError:
     return ApiError(
         status_code=503,
         code="ai_model_missing",
-        title="AI model unavailable",
-        detail="The configured AI model is not installed.",
+        title="ИИ-модель недоступна",
+        detail="Настроенная ИИ-модель не установлена.",
+    )
+
+
+def ai_disabled() -> ApiError:
+    return ApiError(
+        status_code=503,
+        code="ai_disabled",
+        title="ИИ отключён",
+        detail="Анализ ответов отключён в настройках приложения.",
+    )
+
+
+def ai_provider_timeout() -> ApiError:
+    return ApiError(
+        status_code=504,
+        code="ai_provider_timeout",
+        title="Истекло время ожидания ИИ",
+        detail="ИИ-провайдер не успел ответить. Анализ можно запустить повторно.",
+    )
+
+
+def ai_invalid_response() -> ApiError:
+    return ApiError(
+        status_code=502,
+        code="ai_invalid_response",
+        title="Некорректный ответ ИИ",
+        detail="Ответ ИИ-провайдера не прошёл проверку структуры.",
+    )
+
+
+def ai_request_in_progress() -> ApiError:
+    return ApiError(
+        status_code=409,
+        code="ai_request_in_progress",
+        title="Анализ уже выполняется",
+        detail="Запрос с этим ключом идемпотентности ещё выполняется.",
     )
 
 

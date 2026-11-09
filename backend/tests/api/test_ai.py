@@ -2,7 +2,7 @@ import httpx
 import pytest
 from fastapi import FastAPI
 
-from backend.app.ai.manager import AiProviderState, AiProviderStatus
+from backend.app.ai.manager import AiProviderName, AiProviderState, AiProviderStatus
 from backend.app.ai.providers.base import (
     StructuredModelT,
     StructuredRequest,
@@ -16,6 +16,14 @@ from backend.app.main import create_app
 class StaticAiManager:
     def __init__(self, provider_status: AiProviderStatus) -> None:
         self.provider_status = provider_status
+
+    @property
+    def provider_name(self) -> AiProviderName:
+        return self.provider_status.name
+
+    @property
+    def model(self) -> str:
+        return self.provider_status.model
 
     async def get_status(self) -> AiProviderStatus:
         return self.provider_status

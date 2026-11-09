@@ -5,8 +5,11 @@ from sqlalchemy.schema import CreateIndex, CreateTable
 from backend.app.core.database import Base
 from backend.app.models import CardDifficulty, ReviewRating
 
-EXPECTED_CORE_TABLES = {
+EXPECTED_TABLES = {
+    "ai_requests",
+    "ai_usage_logs",
     "answer_attempts",
+    "answer_evaluations",
     "card_tags",
     "cards",
     "categories",
@@ -16,8 +19,8 @@ EXPECTED_CORE_TABLES = {
 }
 
 
-def test_metadata_contains_only_release_1_core_tables() -> None:
-    assert set(Base.metadata.tables) == EXPECTED_CORE_TABLES
+def test_metadata_contains_only_implemented_tables() -> None:
+    assert set(Base.metadata.tables) == EXPECTED_TABLES
 
 
 def test_all_tables_compile_for_postgresql() -> None:
@@ -38,6 +41,9 @@ def test_foreign_keys_enforce_documented_delete_rules() -> None:
         ("answer_attempts", "card_id"): "RESTRICT",
         ("review_logs", "card_id"): "RESTRICT",
         ("review_logs", "answer_attempt_id"): "RESTRICT",
+        ("answer_evaluations", "request_id"): "RESTRICT",
+        ("answer_evaluations", "answer_attempt_id"): "RESTRICT",
+        ("ai_usage_logs", "request_id"): "RESTRICT",
     }
 
     actual = {}
@@ -74,3 +80,30 @@ def test_domain_enums_match_public_api_values() -> None:
         "good",
         "easy",
     ]
+
+
+def test_ai_tables_have_idempotency_and_range_guards() -> None:
+    requests = Base.metadata.tables["ai_requests"]
+    evaluations = Base.metadata.tables["answer_evaluations"]
+    usage = Base.metadata.tables["ai_usage_logs"]
+
+    request_checks = {
+        constraint.name
+        for constraint in requests.constraints
+        if isinstance(constraint, CheckConstraint)
+    }
+    evaluation_checks = {
+        constraint.name
+        for constraint in evaluations.constraints
+        if isinstance(constraint, CheckConstraint)
+    }
+    usage_checks = {
+        constraint.name
+        for constraint in usage.constraints
+        if isinstance(constraint, CheckConstraint)
+    }
+
+    assert "ck_ai_requests_status_fields_match" in request_checks
+    assert "ck_answer_evaluations_score_range" in evaluation_checks
+    assert "ck_answer_evaluations_completeness_range" in evaluation_checks
+    assert "ck_ai_usage_logs_tokens_nonnegative" in usage_checks

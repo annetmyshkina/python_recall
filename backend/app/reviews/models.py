@@ -23,6 +23,7 @@ from backend.app.core.models import CreatedAtMixin, UUIDPrimaryKeyMixin
 from backend.app.reviews.algorithms.sm2 import ReviewRating
 
 if TYPE_CHECKING:
+    from backend.app.ai.models import AnswerEvaluation
     from backend.app.cards.models import Card
 
 
@@ -52,6 +53,10 @@ class AnswerAttempt(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     review_log: Mapped["ReviewLog | None"] = relationship(
         back_populates="answer_attempt",
         uselist=False,
+        passive_deletes=True,
+    )
+    answer_evaluations: Mapped[list["AnswerEvaluation"]] = relationship(
+        back_populates="answer_attempt",
         passive_deletes=True,
     )
 

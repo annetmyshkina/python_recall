@@ -47,6 +47,9 @@ EXPECTED_OPERATIONS = {
     ("/statistics/topics", "get"),
     ("/statistics/activity", "get"),
     ("/ai/providers", "get"),
+    ("/ai/evaluate-answer", "post"),
+    ("/ai/answer-evaluations", "get"),
+    ("/ai/answer-evaluations/{evaluation_id}", "get"),
     ("/health", "get"),
     ("/health/database", "get"),
     ("/health/ai", "get"),
@@ -65,6 +68,7 @@ INPUT_SCHEMAS = {
     "DifficultSessionRequest",
     "ManualSessionRequest",
     "AnswerAttemptCreate",
+    "AnswerEvaluationCreate",
     "ReviewComplete",
 }
 PATH_PARAMETER_PATTERN = re.compile(r"\{([^{}]+)\}")
@@ -265,7 +269,10 @@ def validate() -> tuple[int, int, int]:
         for parameter in operation.get("parameters", []):
             if parameter.get("$ref") == "#/components/parameters/IdempotencyKey":
                 idempotency_users.append((path, method))
-    assert idempotency_users == [("/reviews/{card_id}/complete", "post")]
+    assert set(idempotency_users) == {
+        ("/reviews/{card_id}/complete", "post"),
+        ("/ai/evaluate-answer", "post"),
+    }
 
     schemas = document["components"]["schemas"]
     for name in INPUT_SCHEMAS:
@@ -282,6 +289,8 @@ def validate() -> tuple[int, int, int]:
         "InternalError",
         "DatabaseUnavailable",
         "AiUnavailable",
+        "AiInvalidResponse",
+        "AiTimeout",
     }
     for name in problem_responses:
         content = document["components"]["responses"][name]["content"]

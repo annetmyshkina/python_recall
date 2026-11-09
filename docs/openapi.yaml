@@ -863,6 +863,114 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
 
+  /ai/evaluate-answer:
+    post:
+      tags: [AI]
+      operationId: evaluate_answer
+      summary: Evaluate one saved learner answer without changing SM-2
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnswerEvaluationCreate"
+      responses:
+        "201":
+          description: Answer evaluation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnswerEvaluation"
+        "200":
+          description: Previously saved evaluation replayed
+          headers:
+            Idempotency-Replayed:
+              description: Always true for a replayed result.
+              required: true
+              schema:
+                type: boolean
+                const: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnswerEvaluation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/AiInvalidResponse"
+        "503":
+          $ref: "#/components/responses/AiUnavailable"
+        "504":
+          $ref: "#/components/responses/AiTimeout"
+
+  /ai/answer-evaluations:
+    get:
+      tags: [AI]
+      operationId: list_answer_evaluations
+      summary: List saved answer evaluations
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: attempt_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Paginated immutable answer evaluations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnswerEvaluationPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /ai/answer-evaluations/{evaluation_id}:
+    parameters:
+      - name: evaluation_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [AI]
+      operationId: get_answer_evaluation
+      summary: Get one immutable answer evaluation
+      responses:
+        "200":
+          description: Saved answer evaluation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnswerEvaluation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
   /health:
     get:
       tags: [Health]
@@ -968,7 +1076,7 @@ components:
       name: Idempotency-Key
       in: header
       required: true
-      description: Client-generated UUID unique to one review completion intent.
+      description: Client-generated UUID unique to one command intent.
       schema:
         type: string
         format: uuid
@@ -1025,6 +1133,18 @@ components:
             $ref: "#/components/schemas/ProblemDetails"
     AiUnavailable:
       description: Configured AI provider or model is unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    AiInvalidResponse:
+      description: AI response failed strict structured validation
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    AiTimeout:
+      description: AI provider exceeded the configured timeout
       content:
         application/problem+json:
           schema:
@@ -1141,6 +1261,124 @@ components:
           type: string
           minLength: 1
           maxLength: 200
+
+    AnswerCorrectness:
+      type: string
+      enum: [correct, partially_correct, incorrect, needs_review]
+
+    AnswerEvaluationCreate:
+      type: object
+      additionalProperties: false
+      required: [attempt_id]
+      properties:
+        attempt_id:
+          type: string
+          format: uuid
+
+    AnswerEvaluation:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - request_id
+        - attempt_id
+        - card_id
+        - correctness
+        - completeness
+        - score
+        - covered_concepts
+        - missing_concepts
+        - mistakes
+        - feedback
+        - recommendation
+        - provider
+        - model
+        - prompt_version
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        request_id:
+          type: string
+          format: uuid
+          readOnly: true
+        attempt_id:
+          type: string
+          format: uuid
+          readOnly: true
+        card_id:
+          type: string
+          format: uuid
+          readOnly: true
+        correctness:
+          $ref: "#/components/schemas/AnswerCorrectness"
+        completeness:
+          type: integer
+          minimum: 0
+          maximum: 100
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        covered_concepts:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 500
+        missing_concepts:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 500
+        mistakes:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 500
+        feedback:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        recommendation:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        provider:
+          type: string
+          minLength: 1
+          maxLength: 50
+        model:
+          type: string
+          minLength: 1
+          maxLength: 200
+        prompt_version:
+          type: string
+          minLength: 1
+          maxLength: 100
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    AnswerEvaluationPage:
+      type: object
+      additionalProperties: false
+      required: [items, pagination]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerEvaluation"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
 
     Category:
       type: object

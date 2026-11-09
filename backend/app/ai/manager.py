@@ -30,6 +30,14 @@ class AiProviderStatus:
 class AiManager(Protocol):
     """Application-facing AI boundary suitable for test doubles."""
 
+    @property
+    def provider_name(self) -> AiProviderName:
+        """Return the configured provider without performing I/O."""
+
+    @property
+    def model(self) -> str:
+        """Return the configured model without performing I/O."""
+
     async def get_status(self) -> AiProviderStatus:
         """Return the current optional provider state."""
 
@@ -52,6 +60,14 @@ class AiProviderManager:
         self._enabled = settings.ai_enabled
         self._provider = provider or OllamaProvider(settings)
 
+    @property
+    def provider_name(self) -> AiProviderName:
+        return "ollama"
+
+    @property
+    def model(self) -> str:
+        return self._provider.model
+
     async def get_status(self) -> AiProviderStatus:
         if not self._enabled:
             state: AiProviderState = "disabled"
@@ -64,10 +80,10 @@ class AiProviderManager:
                 state = "ready" if model_available else "model_missing"
 
         return AiProviderStatus(
-            name="ollama",
+            name=self.provider_name,
             enabled=self._enabled,
             status=state,
-            model=self._provider.model,
+            model=self.model,
         )
 
     async def generate_structured(
