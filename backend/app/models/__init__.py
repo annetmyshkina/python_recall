@@ -7,6 +7,8 @@ from backend.app.ai.models import (
     AiUsageStatus,
     AnswerCorrectness,
     AnswerEvaluation,
+    CardAnalysis,
+    CardQuality,
 )
 from backend.app.cards.models import Card, CardDifficulty
 from backend.app.categories.models import Category
@@ -23,7 +25,9 @@ __all__ = [
     "AiUsageLog",
     "AiUsageStatus",
     "Card",
+    "CardAnalysis",
     "CardDifficulty",
+    "CardQuality",
     "CardTag",
     "Category",
     "ReviewLog",

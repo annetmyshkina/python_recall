@@ -22,6 +22,7 @@ import {
   listTopics,
   updateCard,
 } from "../knowledge-base/api";
+import { CardAnalysisPanel } from "./CardAnalysisPanel";
 
 const cardSchema = z.object({
   category_id: z.string().min(1, "Выберите категорию"),
@@ -333,6 +334,26 @@ export function CardFormPage() {
             {...register("code_example")}
           />
         </section>
+
+        {cardId ? (
+          <section className="border-t border-stone-200 pt-7">
+            <CardAnalysisPanel
+              cardId={cardId}
+              onApply={(values) => {
+                for (const [field, value] of Object.entries(values)) {
+                  setValue(field as "question" | "answer" | "explanation" | "code_example", value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                }
+              }}
+            />
+          </section>
+        ) : (
+          <Alert title="Анализ доступен после создания" variant="info">
+            Сначала сохраните карточку, затем откройте её редактирование.
+          </Alert>
+        )}
 
         <section className="border-t border-stone-200 pt-7">
           <h2 className="text-lg font-semibold text-slate-950">Классификация</h2>

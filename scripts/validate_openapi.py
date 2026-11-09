@@ -50,6 +50,9 @@ EXPECTED_OPERATIONS = {
     ("/ai/evaluate-answer", "post"),
     ("/ai/answer-evaluations", "get"),
     ("/ai/answer-evaluations/{evaluation_id}", "get"),
+    ("/ai/analyze-card", "post"),
+    ("/ai/card-analyses", "get"),
+    ("/ai/card-analyses/{analysis_id}", "get"),
     ("/health", "get"),
     ("/health/database", "get"),
     ("/health/ai", "get"),
@@ -69,6 +72,7 @@ INPUT_SCHEMAS = {
     "ManualSessionRequest",
     "AnswerAttemptCreate",
     "AnswerEvaluationCreate",
+    "CardAnalysisCreate",
     "ReviewComplete",
 }
 PATH_PARAMETER_PATTERN = re.compile(r"\{([^{}]+)\}")
@@ -272,6 +276,7 @@ def validate() -> tuple[int, int, int]:
     assert set(idempotency_users) == {
         ("/reviews/{card_id}/complete", "post"),
         ("/ai/evaluate-answer", "post"),
+        ("/ai/analyze-card", "post"),
     }
 
     schemas = document["components"]["schemas"]

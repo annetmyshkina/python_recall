@@ -56,6 +56,12 @@ function useFormHandlers(onCreate: (body: CardCreate) => void) {
         pagination: { page: 1, limit: 100, total: 1, pages: 1 },
       }),
     ),
+    http.get("http://localhost/api/v1/ai/providers", () =>
+      HttpResponse.json({
+        default_provider: "ollama",
+        items: [{ name: "ollama", enabled: false, status: "disabled", model: "qwen3:4b" }],
+      }),
+    ),
     http.post("http://localhost/api/v1/cards", async ({ request }) => {
       const body = (await request.json()) as CardCreate;
       onCreate(body);
@@ -187,6 +193,36 @@ describe("CardFormPage", () => {
           });
         },
       ),
+      http.get("http://localhost/api/v1/ai/providers", () =>
+        HttpResponse.json({
+          default_provider: "ollama",
+          items: [{ name: "ollama", enabled: true, status: "ready", model: "qwen3:4b" }],
+        }),
+      ),
+      http.post("http://localhost/api/v1/ai/analyze-card", () =>
+        HttpResponse.json({
+          id: "c4ec8ec3-a48e-44af-b98c-917005c20235",
+          request_id: "6dac7b23-6a36-4ca3-8421-94c492276b69",
+          card_id: "c01d0f83-5465-44cd-b0af-5ad894d04eed",
+          quality: "needs_improvement",
+          clarity_score: 80,
+          completeness_score: 60,
+          accuracy_score: 90,
+          specificity_score: 75,
+          learning_value_score: 85,
+          issues: [{ field: "answer", severity: "warning", message: "Ответ слишком краткий." }],
+          feedback: "Карточку можно улучшить.",
+          recommendation: "Расширьте ответ.",
+          suggested_question: null,
+          suggested_answer: "Уточнённый ответ с примером.",
+          suggested_explanation: null,
+          suggested_code_example: null,
+          provider: "ollama",
+          model: "qwen3:4b",
+          prompt_version: "card-analyzer-v2-ru",
+          created_at: "2026-11-09T10:00:00Z",
+        }, { status: 201 }),
+      ),
     );
 
     renderWithProviders(
@@ -199,6 +235,12 @@ describe("CardFormPage", () => {
 
     const question = await screen.findByRole("textbox", { name: "Вопрос" });
     expect(question).toHaveValue("Старый вопрос");
+    await user.click(await screen.findByRole("button", { name: "Проанализировать карточку" }));
+    expect(await screen.findByText("Карточку можно улучшить.")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Эталонный ответ" })).toBeChecked();
+    await user.click(screen.getByRole("button", { name: "Перенести выбранное в форму" }));
+    expect(screen.getByRole("textbox", { name: "Эталонный ответ" })).toHaveValue("Уточнённый ответ с примером.");
+    expect(patched).toBeUndefined();
     await user.clear(question);
     await user.type(question, "Новый вопрос");
     await user.click(
@@ -207,5 +249,6 @@ describe("CardFormPage", () => {
 
     expect(await screen.findByText("Карточка обновлена")).toBeInTheDocument();
     expect(patched?.question).toBe("Новый вопрос");
+    expect(patched?.answer).toBe("Уточнённый ответ с примером.");
   });
 });

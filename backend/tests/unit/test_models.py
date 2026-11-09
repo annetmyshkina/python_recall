@@ -11,6 +11,7 @@ EXPECTED_TABLES = {
     "answer_attempts",
     "answer_evaluations",
     "card_tags",
+    "card_analyses",
     "cards",
     "categories",
     "review_logs",
@@ -44,6 +45,8 @@ def test_foreign_keys_enforce_documented_delete_rules() -> None:
         ("answer_evaluations", "request_id"): "RESTRICT",
         ("answer_evaluations", "answer_attempt_id"): "RESTRICT",
         ("ai_usage_logs", "request_id"): "RESTRICT",
+        ("card_analyses", "request_id"): "RESTRICT",
+        ("card_analyses", "card_id"): "RESTRICT",
     }
 
     actual = {}

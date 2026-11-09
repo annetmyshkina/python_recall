@@ -4,7 +4,12 @@ from uuid import UUID
 
 from pydantic import Field
 
-from backend.app.ai.models import AnswerCorrectness, AnswerEvaluation
+from backend.app.ai.models import (
+    AnswerCorrectness,
+    AnswerEvaluation,
+    CardAnalysis,
+    CardQuality,
+)
 from backend.app.core.schemas import ApiSchema, Page
 
 AiProviderName = Literal["ollama"]
@@ -77,3 +82,44 @@ def evaluation_to_read(evaluation: AnswerEvaluation) -> AnswerEvaluationRead:
         prompt_version=evaluation.prompt_version,
         created_at=evaluation.created_at,
     )
+
+
+class CardAnalysisCreate(ApiSchema):
+    card_id: UUID
+
+
+class CardIssueRead(ApiSchema):
+    field: Literal["question", "answer", "explanation", "code_example", "general"]
+    severity: Literal["info", "warning", "critical"]
+    message: str
+
+
+class CardAnalysisRead(ApiSchema):
+    id: UUID
+    request_id: UUID
+    card_id: UUID
+    quality: CardQuality
+    clarity_score: int = Field(ge=0, le=100)
+    completeness_score: int = Field(ge=0, le=100)
+    accuracy_score: int = Field(ge=0, le=100)
+    specificity_score: int = Field(ge=0, le=100)
+    learning_value_score: int = Field(ge=0, le=100)
+    issues: list[CardIssueRead]
+    feedback: str
+    recommendation: str
+    suggested_question: str | None
+    suggested_answer: str | None
+    suggested_explanation: str | None
+    suggested_code_example: str | None
+    provider: str
+    model: str
+    prompt_version: str
+    created_at: datetime
+
+
+class CardAnalysisPage(Page[CardAnalysisRead]):
+    pass
+
+
+def card_analysis_to_read(analysis: CardAnalysis) -> CardAnalysisRead:
+    return CardAnalysisRead.model_validate(analysis)

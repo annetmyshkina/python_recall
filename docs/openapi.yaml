@@ -971,6 +971,82 @@ paths:
         "503":
           $ref: "#/components/responses/DatabaseUnavailable"
 
+  /ai/analyze-card:
+    post:
+      tags: [AI]
+      operationId: analyze_card
+      summary: Analyze a saved card without modifying it
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardAnalysisCreate"
+      responses:
+        "201":
+          description: Card analysis created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardAnalysis"
+        "200":
+          description: Saved analysis replayed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardAnalysis"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "500": { $ref: "#/components/responses/InternalError" }
+        "502": { $ref: "#/components/responses/AiInvalidResponse" }
+        "503": { $ref: "#/components/responses/AiUnavailable" }
+        "504": { $ref: "#/components/responses/AiTimeout" }
+
+  /ai/card-analyses:
+    get:
+      tags: [AI]
+      operationId: list_card_analyses
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: card_id
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Paginated card analyses
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardAnalysisPage" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "500": { $ref: "#/components/responses/InternalError" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+
+  /ai/card-analyses/{analysis_id}:
+    parameters:
+      - name: analysis_id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [AI]
+      operationId: get_card_analysis
+      responses:
+        "200":
+          description: Saved card analysis
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardAnalysis" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+
   /health:
     get:
       tags: [Health]
@@ -1379,6 +1455,69 @@ components:
             $ref: "#/components/schemas/AnswerEvaluation"
         pagination:
           $ref: "#/components/schemas/Pagination"
+
+    CardQuality:
+      type: string
+      enum: [good, needs_improvement, needs_review]
+
+    CardAnalysisCreate:
+      type: object
+      additionalProperties: false
+      required: [card_id]
+      properties:
+        card_id: { type: string, format: uuid }
+
+    CardIssue:
+      type: object
+      additionalProperties: false
+      required: [field, severity, message]
+      properties:
+        field:
+          type: string
+          enum: [question, answer, explanation, code_example, general]
+        severity:
+          type: string
+          enum: [info, warning, critical]
+        message: { type: string, minLength: 1, maxLength: 1000 }
+
+    CardAnalysis:
+      type: object
+      additionalProperties: false
+      required: [id, request_id, card_id, quality, clarity_score, completeness_score, accuracy_score, specificity_score, learning_value_score, issues, feedback, recommendation, suggested_question, suggested_answer, suggested_explanation, suggested_code_example, provider, model, prompt_version, created_at]
+      properties:
+        id: { type: string, format: uuid, readOnly: true }
+        request_id: { type: string, format: uuid, readOnly: true }
+        card_id: { type: string, format: uuid, readOnly: true }
+        quality: { $ref: "#/components/schemas/CardQuality" }
+        clarity_score: { type: integer, minimum: 0, maximum: 100 }
+        completeness_score: { type: integer, minimum: 0, maximum: 100 }
+        accuracy_score: { type: integer, minimum: 0, maximum: 100 }
+        specificity_score: { type: integer, minimum: 0, maximum: 100 }
+        learning_value_score: { type: integer, minimum: 0, maximum: 100 }
+        issues:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/CardIssue" }
+        feedback: { type: string, minLength: 1, maxLength: 5000 }
+        recommendation: { type: string, minLength: 1, maxLength: 5000 }
+        suggested_question: { type: [string, "null"], maxLength: 10000 }
+        suggested_answer: { type: [string, "null"], maxLength: 50000 }
+        suggested_explanation: { type: [string, "null"], maxLength: 50000 }
+        suggested_code_example: { type: [string, "null"], maxLength: 50000 }
+        provider: { type: string }
+        model: { type: string }
+        prompt_version: { type: string }
+        created_at: { type: string, format: date-time, readOnly: true }
+
+    CardAnalysisPage:
+      type: object
+      additionalProperties: false
+      required: [items, pagination]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/CardAnalysis" }
+        pagination: { $ref: "#/components/schemas/Pagination" }
 
     Category:
       type: object

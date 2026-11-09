@@ -22,6 +22,7 @@ from backend.app.core.database import Base
 from backend.app.core.models import TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
+    from backend.app.ai.models import CardAnalysis
     from backend.app.reviews.models import AnswerAttempt, ReviewLog
     from backend.app.tags.models import CardTag, Tag
     from backend.app.topics.models import Topic
@@ -129,6 +130,10 @@ class Card(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         passive_deletes=True,
     )
     review_logs: Mapped[list["ReviewLog"]] = relationship(
+        back_populates="card",
+        passive_deletes=True,
+    )
+    card_analyses: Mapped[list["CardAnalysis"]] = relationship(
         back_populates="card",
         passive_deletes=True,
     )

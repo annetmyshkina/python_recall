@@ -37,6 +37,8 @@ export type AnswerCorrectness = components["schemas"]["AnswerCorrectness"];
 export type AnswerEvaluation = components["schemas"]["AnswerEvaluation"];
 export type AnswerEvaluationCreate =
   components["schemas"]["AnswerEvaluationCreate"];
+export type CardAnalysis = components["schemas"]["CardAnalysis"];
+export type CardAnalysisCreate = components["schemas"]["CardAnalysisCreate"];
 
 export type StatisticsOverview = components["schemas"]["StatisticsOverview"];
 export type TopicStatistics = components["schemas"]["TopicStatistics"];

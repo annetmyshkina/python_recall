@@ -389,6 +389,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ai/analyze-card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Analyze a saved card without modifying it */
+        post: operations["analyze_card"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai/card-analyses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_card_analyses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai/card-analyses/{analysis_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                analysis_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["get_card_analysis"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -517,6 +568,49 @@ export interface components {
         };
         AnswerEvaluationPage: {
             items: components["schemas"]["AnswerEvaluation"][];
+            pagination: components["schemas"]["Pagination"];
+        };
+        /** @enum {string} */
+        CardQuality: "good" | "needs_improvement" | "needs_review";
+        CardAnalysisCreate: {
+            /** Format: uuid */
+            card_id: string;
+        };
+        CardIssue: {
+            /** @enum {string} */
+            field: "question" | "answer" | "explanation" | "code_example" | "general";
+            /** @enum {string} */
+            severity: "info" | "warning" | "critical";
+            message: string;
+        };
+        CardAnalysis: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly request_id: string;
+            /** Format: uuid */
+            readonly card_id: string;
+            quality: components["schemas"]["CardQuality"];
+            clarity_score: number;
+            completeness_score: number;
+            accuracy_score: number;
+            specificity_score: number;
+            learning_value_score: number;
+            issues: components["schemas"]["CardIssue"][];
+            feedback: string;
+            recommendation: string;
+            suggested_question: string | null;
+            suggested_answer: string | null;
+            suggested_explanation: string | null;
+            suggested_code_example: string | null;
+            provider: string;
+            model: string;
+            prompt_version: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        CardAnalysisPage: {
+            items: components["schemas"]["CardAnalysis"][];
             pagination: components["schemas"]["Pagination"];
         };
         Category: {
@@ -1887,6 +1981,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AnswerEvaluation"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["DatabaseUnavailable"];
+        };
+    };
+    analyze_card: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Client-generated UUID unique to one command intent. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CardAnalysisCreate"];
+            };
+        };
+        responses: {
+            /** @description Saved analysis replayed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardAnalysis"];
+                };
+            };
+            /** @description Card analysis created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardAnalysis"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            422: components["responses"]["ValidationError"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["AiInvalidResponse"];
+            503: components["responses"]["AiUnavailable"];
+            504: components["responses"]["AiTimeout"];
+        };
+    };
+    list_card_analyses: {
+        parameters: {
+            query?: {
+                page?: components["parameters"]["Page"];
+                limit?: components["parameters"]["Limit"];
+                card_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated card analyses */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardAnalysisPage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            422: components["responses"]["ValidationError"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["DatabaseUnavailable"];
+        };
+    };
+    get_card_analysis: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                analysis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Saved card analysis */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardAnalysis"];
                 };
             };
             404: components["responses"]["NotFound"];
