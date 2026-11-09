@@ -14,7 +14,8 @@
 
 - [ADR-001](adr/ADR-001-review-algorithm.md) — алгоритм повторений;
 - [ADR-002](adr/ADR-002-entity-lifecycle.md) — жизненный цикл сущностей;
-- [ADR-003](adr/ADR-003-frontend-architecture.md) — архитектура Frontend.
+- [ADR-003](adr/ADR-003-frontend-architecture.md) — архитектура Frontend;
+- [ADR-004](adr/ADR-004-ai-architecture.md) — архитектура AI-модуля Release 3.
 
 ## Архитектурные границы
 
@@ -258,6 +259,10 @@ AI-модуль будет расширять core-модель миграция
 Названия, поля, enum и правила удаления этих таблиц намеренно не фиксируются в
 Release 1. AI-сущности не смогут каскадно изменять или удалять Card, ReviewLog и
 AnswerAttempt.
+
+Точные границы provider/scenario/persistence, правила structured output,
+идемпотентности и постепенного добавления таблиц определены в ADR-004. План
+последовательной реализации описан в [плане Release 3](release-3-plan.md).
 
 ## Зафиксированный контракт Release 1
 

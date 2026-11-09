@@ -153,6 +153,7 @@ Category → Topic → Card → Review → Statistics.
 - [REST API](docs/api.md)
 - [OpenAPI 3.1](docs/openapi.yaml)
 - [План Release 2](docs/release-2-plan.md)
+- [План Release 3](docs/release-3-plan.md)
 - [ADR](docs/adr/)
 
 В Release 1 реализованы Backend API, миграции, CRUD базы знаний, SM-2, Review
