@@ -39,7 +39,7 @@ describe("DashboardPage", () => {
     expect(
       screen.getByRole("link", { name: "Начать повторение" }),
     ).toHaveAttribute("href", "/review");
-    expect(screen.getByText(/Release 3/)).toBeInTheDocument();
+    expect(screen.getByText(/третьей версии/)).toBeInTheDocument();
   });
 
   it("explains how to start when the knowledge base is empty", async () => {

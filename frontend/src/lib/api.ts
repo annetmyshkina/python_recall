@@ -11,6 +11,38 @@ interface ApiRequestOptions extends Omit<RequestInit, "body"> {
   query?: Record<string, QueryValue>;
 }
 
+const apiErrorMessages: Record<string, string> = {
+  resource_not_found: "Запрошенные данные не найдены.",
+  duplicate_resource: "Запись с такими данными уже существует.",
+  deletion_restricted: "Удаление невозможно из-за связанных данных.",
+  database_unavailable: "База данных временно недоступна.",
+  card_archived: "Архивную карточку нельзя использовать для обучения.",
+  idempotency_conflict:
+    "Этот ключ повторного запроса уже использован для другой операции.",
+  review_conflict: "Не удалось завершить повторение из-за конфликта данных.",
+  validation_error: "Проверьте введённые данные.",
+  malformed_request: "Запрос содержит некорректные данные.",
+  method_not_allowed: "Эта операция не поддерживается.",
+  request_too_large: "Размер отправляемых данных слишком велик.",
+  internal_error: "На сервере произошла непредвиденная ошибка.",
+  http_error: "Сервер не смог обработать запрос.",
+  network_error: "Не удалось связаться с сервером. Проверьте соединение.",
+  invalid_response: "Сервер вернул данные в неожиданном формате.",
+};
+
+const fieldErrorMessages: Record<string, string> = {
+  missing: "Обязательное поле.",
+  string_too_short: "Значение слишком короткое.",
+  string_too_long: "Значение слишком длинное.",
+  uuid_parsing: "Некорректный идентификатор.",
+  enum: "Выбрано недопустимое значение.",
+  extra_forbidden: "Поле не поддерживается.",
+};
+
+function containsCyrillic(value: string) {
+  return /[А-ЯЁа-яё]/.test(value);
+}
+
 function createProblem(
   status: number,
   code: string,
@@ -107,7 +139,13 @@ export class ApiError extends Error {
 
 export function getApiErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
-    return error.problem.detail;
+    if (containsCyrillic(error.problem.detail)) {
+      return error.problem.detail;
+    }
+    return (
+      apiErrorMessages[error.code] ??
+      "Не удалось выполнить запрос. Попробуйте ещё раз."
+    );
   }
 
   return "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
@@ -118,9 +156,14 @@ export function getApiFieldError(error: unknown, fieldName: string) {
     return undefined;
   }
 
-  return error.problem.errors.find((item) =>
+  const fieldError = error.problem.errors.find((item) =>
     item.field.split(".").includes(fieldName),
-  )?.message;
+  );
+  return fieldError
+    ? containsCyrillic(fieldError.message)
+      ? fieldError.message
+      : (fieldErrorMessages[fieldError.code] ?? "Проверьте значение поля.")
+    : undefined;
 }
 
 export async function apiRequest<T>(

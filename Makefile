@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help sync lock lock-check run lint format format-check openapi-check migration-sql-check migrate migration-check test test-cov check release-check frontend-sync frontend-install frontend-run frontend-api-generate frontend-check smoke-crud smoke-reviews compose-config compose-up compose-down compose-logs
+.PHONY: help sync lock lock-check run lint format format-check openapi-check migration-sql-check migrate migration-check test test-cov check release-check release-2-check frontend-sync frontend-install frontend-run frontend-api-generate frontend-check smoke-crud smoke-reviews smoke-frontend compose-smoke compose-config compose-up compose-down compose-logs
 
 help: ## Показать доступные команды
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "%-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -48,6 +48,8 @@ check: lock-check lint format-check openapi-check migration-sql-check test ## В
 
 release-check: lock-check lint format-check openapi-check migration-sql-check compose-config test-cov ## Проверить готовность Release 1
 
+release-2-check: release-check frontend-check ## Выполнить все статические проверки и тесты Release 2
+
 frontend-sync: ## Установить или обновить зависимости Frontend и lock-файл
 	npm --prefix frontend install
 
@@ -69,10 +71,18 @@ smoke-crud: ## Проверить CRUD на запущенном Backend и уд
 smoke-reviews: ## Проверить Review API на запущенном Backend и удалить тестовые данные
 	uv run python -m scripts.smoke_reviews
 
+smoke-frontend: ## Проверить production Frontend, SPA-маршруты и API proxy
+	uv run python -m scripts.smoke_frontend
+
+compose-smoke: ## Проверить всё приложение через production Frontend
+	FRONTEND_URL="$${FRONTEND_URL:-http://localhost:8080}" uv run python -m scripts.smoke_frontend
+	SMOKE_API_BASE_URL="$${FRONTEND_URL:-http://localhost:8080}/api/v1" uv run python scripts/smoke_crud.py
+	SMOKE_API_BASE_URL="$${FRONTEND_URL:-http://localhost:8080}/api/v1" uv run python -m scripts.smoke_reviews
+
 compose-config: ## Проверить Docker Compose конфигурацию
 	docker compose config --quiet
 
-compose-up: ## Собрать и запустить Backend и PostgreSQL
+compose-up: ## Собрать и запустить Frontend, Backend и PostgreSQL
 	docker compose up --build --detach --wait --wait-timeout 60
 
 compose-down: ## Остановить контейнеры без удаления данных

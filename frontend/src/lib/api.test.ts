@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 
 import { server } from "../test/server";
 import type { components } from "../types/api.generated";
-import { ApiError, apiRequest } from "./api";
+import {
+  ApiError,
+  apiRequest,
+  getApiErrorMessage,
+  getApiFieldError,
+} from "./api";
 
 type CategoryPage = components["schemas"]["CategoryPage"];
 
@@ -25,6 +30,30 @@ async function expectApiError(
 }
 
 describe("apiRequest", () => {
+  it("does not expose English server messages to the user", () => {
+    const error = new ApiError({
+      type: "urn:python-recall:error:validation-error",
+      title: "Validation error",
+      status: 422,
+      detail: "Request fields did not pass validation.",
+      instance: "/api/v1/cards",
+      code: "validation_error",
+      trace_id: "trace-id",
+      errors: [
+        {
+          field: "body.question",
+          code: "string_too_short",
+          message: "String should have at least 1 character",
+        },
+      ],
+    });
+
+    expect(getApiErrorMessage(error)).toBe("Проверьте введённые данные.");
+    expect(getApiFieldError(error, "question")).toBe(
+      "Значение слишком короткое.",
+    );
+  });
+
   it("sends query parameters and returns JSON", async () => {
     server.use(
       http.get("http://localhost/api/v1/categories", ({ request }) => {

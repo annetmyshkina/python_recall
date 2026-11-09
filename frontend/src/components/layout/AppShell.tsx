@@ -38,14 +38,14 @@ export function AppShell({ children }: PropsWithChildren) {
           </NavLink>
           <nav
             aria-label="Основная навигация"
-            className="min-w-0 overflow-x-auto"
+            className="min-w-0 overflow-x-auto p-1"
           >
             <ul className="flex w-max items-center gap-1 text-sm font-medium text-slate-600">
               {navigation.map((item) => (
                 <li key={item.to}>
                   <NavLink
                     className={({ isActive }) =>
-                      `block rounded-lg px-3 py-2 transition ${
+                      `block rounded-lg px-3 py-2 transition focus-visible:outline-2 focus-visible:outline-teal-600 ${
                         isActive
                           ? "bg-teal-50 text-teal-800"
                           : "hover:bg-stone-100 hover:text-slate-950"
@@ -70,7 +70,7 @@ export function AppShell({ children }: PropsWithChildren) {
       </main>
       <footer className="border-t border-stone-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-5 text-sm text-slate-500 sm:px-6 lg:px-8">
-          Python Recall работает локально и не зависит от AI для повторений.
+          Python Recall работает локально и не зависит от ИИ для повторений.
         </div>
       </footer>
     </div>

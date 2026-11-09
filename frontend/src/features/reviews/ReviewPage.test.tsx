@@ -117,7 +117,12 @@ describe("ReviewPage", () => {
     expect(
       await screen.findByText("Декоратор оборачивает вызываемый объект."),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Good/ }));
+    for (const label of ["Не помню", "Трудно", "Хорошо", "Легко"]) {
+      expect(
+        screen.getByRole("button", { name: new RegExp(label) }),
+      ).toBeInTheDocument();
+    }
+    await user.click(screen.getByRole("button", { name: /Хорошо/ }));
 
     expect(await screen.findByText("Следующий интервал: 6 дн.")).toBeInTheDocument();
     expect(savedAnswer).toBe("Он добавляет поведение функции.");
@@ -163,7 +168,7 @@ describe("ReviewPage", () => {
       screen.getByRole("button", { name: "Показать эталонный ответ" }),
     );
     await screen.findByText("Декоратор оборачивает вызываемый объект.");
-    await user.click(screen.getByRole("button", { name: /Easy/ }));
+    await user.click(screen.getByRole("button", { name: /Легко/ }));
 
     expect(await screen.findByText("Оценка сохранена")).toBeInTheDocument();
     expect(attemptRequests).toBe(0);
@@ -195,7 +200,7 @@ describe("ReviewPage", () => {
     await user.click(
       screen.getByRole("button", { name: "Показать эталонный ответ" }),
     );
-    await user.click(screen.getByRole("button", { name: /Hard/ }));
+    await user.click(screen.getByRole("button", { name: /Трудно/ }));
     await user.click(
       await screen.findByRole("button", { name: "Повторить отправку" }),
     );

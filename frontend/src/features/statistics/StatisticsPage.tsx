@@ -81,7 +81,7 @@ export function StatisticsPage() {
             Статистика обучения
           </h1>
           <p className="mt-3 max-w-2xl text-slate-600">
-            Данные рассчитаны Backend из карточек и подтверждённой истории
+            Данные рассчитаны сервером из карточек и подтверждённой истории
             повторений.
           </p>
         </div>
@@ -121,7 +121,7 @@ export function StatisticsPage() {
             value={overview.reviews_today}
           />
           <MetricCard
-            hint="Hard, Good и Easy считаются успешными"
+            hint="Оценки «Трудно», «Хорошо» и «Легко» считаются успешными"
             label="Успешность"
             value={formatPercent(overview.success_rate_30d)}
           />
@@ -138,8 +138,8 @@ export function StatisticsPage() {
             Повторения по дням
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Зелёным отмечены Hard, Good и Easy; жёлтым — Again. Точные значения
-            приведены в таблице под графиком.
+            Зелёным отмечены оценки «Трудно», «Хорошо» и «Легко»; жёлтым — «Не
+            помню». Точные значения приведены в таблице под графиком.
           </p>
         </div>
         {activityQuery.isPending ? (
@@ -206,7 +206,7 @@ export function StatisticsPage() {
                     <th className="px-3 py-3" scope="col">Тема</th>
                     <th className="px-3 py-3" scope="col">Активные</th>
                     <th className="px-3 py-3" scope="col">Новые</th>
-                    <th className="px-3 py-3" scope="col">Due</th>
+                    <th className="px-3 py-3" scope="col">К повторению</th>
                     <th className="px-3 py-3" scope="col">Повторения</th>
                     <th className="px-3 py-3" scope="col">Успешность</th>
                   </tr>
@@ -284,7 +284,7 @@ export function StatisticsPage() {
             </h2>
             {attentionTopics.length === 0 ? (
               <p className="mt-4 text-sm leading-6 text-slate-600">
-                На этой странице нет тем с due-карточками.
+                На этой странице нет тем с карточками к повторению.
               </p>
             ) : (
               <ol className="mt-4 space-y-3">
@@ -298,7 +298,7 @@ export function StatisticsPage() {
             )}
             <p className="mt-4 text-xs leading-5 text-slate-500">
               Приоритет определяется только наступившим сроком. Анализ слабых тем
-              входит в Release 4.
+              входит в четвёртую версию.
             </p>
           </section>
         </div>

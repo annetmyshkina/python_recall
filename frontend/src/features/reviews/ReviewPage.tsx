@@ -42,25 +42,25 @@ const ratingOptions: Array<{
 }> = [
   {
     rating: "again",
-    label: "Again",
+    label: "Не помню",
     description: "Не вспомнила или ответила неправильно",
     variant: "danger",
   },
   {
     rating: "hard",
-    label: "Hard",
+    label: "Трудно",
     description: "Вспомнила с трудом",
     variant: "secondary",
   },
   {
     rating: "good",
-    label: "Good",
+    label: "Хорошо",
     description: "Ответила правильно",
     variant: "primary",
   },
   {
     rating: "easy",
-    label: "Easy",
+    label: "Легко",
     description: "Ответила легко",
     variant: "primary",
   },
@@ -178,13 +178,14 @@ export function ReviewPage() {
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600">
           Сначала сформулируйте ответ самостоятельно, затем сравните его с эталоном
-          и честно выберите оценку. Расписание рассчитает Backend.
+          и честно выберите оценку. Расписание рассчитает сервер.
         </p>
         <Button className="mt-8" onClick={startSession} size="lg">
           Начать повторение
         </Button>
         <p className="mt-5 text-sm text-slate-500">
-          AI-анализ появится в Release 3. Обычный режим SM-2 работает без AI.
+          Анализ с помощью ИИ появится в третьей версии. Обычный режим SM-2
+          работает без ИИ.
         </p>
       </div>
     );

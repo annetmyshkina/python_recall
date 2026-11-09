@@ -8,7 +8,7 @@ AI-наставником.
 - Python 3.12 или новее;
 - [uv](https://docs.astral.sh/uv/);
 - Node.js 22.13 или новее и npm;
-- Docker с Docker Compose для PostgreSQL и контейнерного запуска Backend;
+- Docker с Docker Compose для контейнерного запуска всего приложения;
 - GNU Make для коротких команд разработки.
 
 ## Быстрый старт Backend без Docker
@@ -33,7 +33,10 @@ cp .env.example .env
 make compose-up
 ```
 
-Compose запускает PostgreSQL 17 и Backend. Данные PostgreSQL сохраняются в
+Compose запускает PostgreSQL 17, Backend и production Frontend. Приложение
+доступно на <http://localhost:8080>; Nginx раздаёт React SPA и проксирует
+`/api/v1` в Backend. Backend API также остаётся доступен напрямую на порту
+`8000` для Swagger UI и разработки. Данные PostgreSQL сохраняются в
 именованном volume `python-recall_postgres_data`. PostgreSQL доступен с хоста
 на `127.0.0.1:5433`, чтобы не конфликтовать с локальной БД на стандартном
 порту `5432`. Перед запуском Uvicorn контейнер Backend автоматически применяет
@@ -58,11 +61,14 @@ make run            Запустить Backend с auto-reload
 make test           Запустить тесты
 make check          Выполнить все проверки
 make release-check  Выполнить итоговую проверку Release 1 с покрытием
+make release-2-check Выполнить Backend и Frontend проверки Release 2
 make openapi-check  Проверить проектный OpenAPI-контракт
 make migrate        Применить миграции Alembic к настроенной БД
 make migration-check Проверить соответствие БД ORM-моделям
 make smoke-crud     Проверить CRUD на запущенном Backend
 make smoke-reviews  Проверить Review API на запущенном Backend
+make smoke-frontend Проверить production Frontend и API proxy
+make compose-smoke  Проверить приложение через production Frontend
 make compose-config Проверить итоговую Compose-конфигурацию
 make compose-up     Собрать и запустить контейнеры
 make compose-down   Остановить контейнеры
@@ -117,6 +123,29 @@ make smoke-crud
 make smoke-reviews
 ```
 
+## Итоговая проверка Release 2
+
+Статические проверки, тесты Backend с покрытием и полный Frontend check:
+
+```bash
+make release-2-check
+```
+
+Чистая production-сборка трёх сервисов и интеграционные smoke-проверки через
+Nginx proxy:
+
+```bash
+make compose-down
+make compose-up
+make migration-check
+make compose-smoke
+docker compose ps
+```
+
+После запуска пользовательский интерфейс доступен на
+<http://localhost:8080>. Для финальной ручной проверки пройдите цепочку:
+Category → Topic → Card → Review → Statistics.
+
 ## Документация
 
 - [Спецификация](spec.md)
@@ -126,9 +155,8 @@ make smoke-reviews
 - [План Release 2](docs/release-2-plan.md)
 - [ADR](docs/adr/)
 
-В проекте реализованы core-модели Release 1, миграции Alembic, CRUD категорий,
-тем, тегов и карточек, а также чистое ядро SM-2 и календарный расчёт следующего
-повторения. Review API формирует очереди, сохраняет ответы отдельно и применяет
-подтверждённые оценки транзакционно с защитой от повторных запросов.
-Статистика рассчитывается из карточек и истории повторений без отдельной
-денормализованной таблицы.
+В Release 1 реализованы Backend API, миграции, CRUD базы знаний, SM-2, Review
+Engine и статистика. Release 2 добавляет React-интерфейс для управления базой
+знаний, повторений и просмотра прогресса, а также production-сборку с Nginx.
+AI-функции остаются необязательными и будут добавляться отдельными сценариями в
+следующих релизах.

@@ -12,7 +12,7 @@ export function UnexpectedErrorPage() {
         </h1>
         <p className="mt-4 leading-7 text-slate-600">
           Обновите страницу. Если ошибка повторяется, проверьте консоль разработки
-          и состояние Backend.
+          и состояние сервера.
         </p>
         <Button className="mt-7" onClick={() => window.location.reload()}>
           Обновить страницу

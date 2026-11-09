@@ -60,7 +60,7 @@ export function DashboardPage() {
             </h1>
             <p className="mt-4 max-w-2xl leading-7 text-slate-300">
               На повторение готовы {overview.due_cards} карточек. Расписание и
-              интервалы рассчитает Backend по подтверждённым оценкам.
+              интервалы рассчитает сервер по подтверждённым оценкам.
             </p>
           </div>
           <Link
@@ -124,7 +124,7 @@ export function DashboardPage() {
             value={overview.reviews_today}
           />
           <MetricCard
-            hint="Hard, Good и Easy за последние 30 дней"
+            hint="Оценки «Трудно», «Хорошо» и «Легко» за последние 30 дней"
             label="Успешность"
             value={formatPercent(overview.success_rate_30d)}
           />
@@ -193,16 +193,17 @@ export function DashboardPage() {
           ) : null}
           <p className="mt-4 text-xs leading-5 text-slate-500">
             Это список по сроку повторения. Формальное определение слабых тем
-            появится вместе с адаптивным обучением в Release 4.
+            появится вместе с адаптивным обучением в четвёртой версии.
           </p>
         </section>
       </div>
 
       <section className="rounded-3xl border border-dashed border-stone-300 bg-stone-100/70 p-6">
-        <p className="text-sm font-semibold text-slate-800">AI-рекомендации</p>
+        <p className="text-sm font-semibold text-slate-800">Рекомендации ИИ</p>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-          Здесь появятся рекомендации наставника после подключения AI в Release 3.
-          Сейчас приложение не создаёт фиктивные советы и полностью работает без AI.
+          Здесь появятся рекомендации наставника после подключения ИИ в третьей
+          версии. Сейчас приложение не создаёт фиктивные советы и полностью
+          работает без ИИ.
         </p>
       </section>
     </div>

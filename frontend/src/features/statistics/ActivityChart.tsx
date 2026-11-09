@@ -46,7 +46,7 @@ export function ActivityChart({ items }: ActivityChartProps) {
           <span className="size-3 rounded-sm bg-teal-600" /> Успешные
         </span>
         <span className="inline-flex items-center gap-2">
-          <span className="size-3 rounded-sm bg-amber-300" /> Again
+          <span className="size-3 rounded-sm bg-amber-300" /> Не помню
         </span>
       </div>
 
