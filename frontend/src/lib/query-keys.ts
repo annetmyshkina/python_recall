@@ -29,5 +29,7 @@ export const queryKeys = {
   statistics: {
     all: ["statistics"] as const,
     overview: ["statistics", "overview"] as const,
+    topics: (params: object) => ["statistics", "topics", params] as const,
+    activity: (params: object) => ["statistics", "activity", params] as const,
   },
 } as const;

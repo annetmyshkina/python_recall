@@ -31,6 +31,12 @@ export type Rating = components["schemas"]["Rating"];
 export type ReviewComplete = components["schemas"]["ReviewComplete"];
 export type ReviewResult = components["schemas"]["ReviewResult"];
 
+export type StatisticsOverview = components["schemas"]["StatisticsOverview"];
+export type TopicStatistics = components["schemas"]["TopicStatistics"];
+export type TopicStatisticsPage = components["schemas"]["TopicStatisticsPage"];
+export type ActivityDay = components["schemas"]["ActivityDay"];
+export type ActivityStatistics = components["schemas"]["ActivityStatistics"];
+
 export type CategoryListParams = NonNullable<
   operations["list_categories"]["parameters"]["query"]
 >;
@@ -42,4 +48,10 @@ export type TagListParams = NonNullable<
 >;
 export type CardListParams = NonNullable<
   operations["list_cards"]["parameters"]["query"]
+>;
+export type TopicStatisticsParams = NonNullable<
+  operations["list_topic_statistics"]["parameters"]["query"]
+>;
+export type ActivityStatisticsParams = NonNullable<
+  operations["get_statistics_activity"]["parameters"]["query"]
 >;
