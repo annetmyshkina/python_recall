@@ -13,6 +13,7 @@ tags:
   - name: Cards
   - name: Reviews
   - name: Statistics
+  - name: AI
   - name: Health
 
 paths:
@@ -847,6 +848,21 @@ paths:
         "503":
           $ref: "#/components/responses/DatabaseUnavailable"
 
+  /ai/providers:
+    get:
+      tags: [AI]
+      operationId: list_ai_providers
+      summary: Inspect configured AI providers without affecting core health
+      responses:
+        "200":
+          description: Configured providers and their current readiness
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiProviders"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
   /health:
     get:
       tags: [Health]
@@ -874,6 +890,23 @@ paths:
                 $ref: "#/components/schemas/DatabaseHealth"
         "503":
           $ref: "#/components/responses/DatabaseUnavailable"
+
+  /health/ai:
+    get:
+      tags: [Health]
+      operationId: get_ai_health
+      summary: Check optional AI provider readiness
+      responses:
+        "200":
+          description: AI is disabled or the configured provider is ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiHealth"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/AiUnavailable"
 
 components:
   parameters:
@@ -990,6 +1023,12 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/ProblemDetails"
+    AiUnavailable:
+      description: Configured AI provider or model is unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
 
   schemas:
     Pagination:
@@ -1049,6 +1088,59 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ProblemField"
+
+    AiProviderName:
+      type: string
+      enum: [ollama]
+
+    AiProviderStatus:
+      type: string
+      enum: [disabled, ready, unavailable, model_missing]
+
+    AiProvider:
+      type: object
+      additionalProperties: false
+      required: [name, enabled, status, model]
+      properties:
+        name:
+          $ref: "#/components/schemas/AiProviderName"
+        enabled:
+          type: boolean
+        status:
+          $ref: "#/components/schemas/AiProviderStatus"
+        model:
+          type: string
+          minLength: 1
+          maxLength: 200
+
+    AiProviders:
+      type: object
+      additionalProperties: false
+      required: [default_provider, items]
+      properties:
+        default_provider:
+          $ref: "#/components/schemas/AiProviderName"
+        items:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            $ref: "#/components/schemas/AiProvider"
+
+    AiHealth:
+      type: object
+      additionalProperties: false
+      required: [status, provider, model]
+      properties:
+        status:
+          type: string
+          enum: [ok, disabled]
+        provider:
+          $ref: "#/components/schemas/AiProviderName"
+        model:
+          type: string
+          minLength: 1
+          maxLength: 200
 
     Category:
       type: object

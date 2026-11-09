@@ -12,6 +12,10 @@ def test_settings_have_safe_local_defaults() -> None:
     assert settings.app_new_cards_per_day == 20
     assert settings.api_v1_prefix == "/api/v1"
     assert settings.database_url.startswith("postgresql+psycopg://")
+    assert settings.ai_enabled is False
+    assert settings.ai_provider == "ollama"
+    assert settings.ollama_base_url == "http://localhost:11434"
+    assert settings.ollama_model == "qwen3:4b"
 
 
 def test_settings_accept_valid_iana_timezone() -> None:
@@ -29,3 +33,28 @@ def test_settings_reject_invalid_iana_timezone() -> None:
 def test_settings_reject_invalid_api_prefix(prefix: str) -> None:
     with pytest.raises(ValidationError, match="api_v1_prefix"):
         Settings(_env_file=None, api_v1_prefix=prefix)
+
+
+def test_settings_normalize_ollama_origin_and_model() -> None:
+    settings = Settings(
+        _env_file=None,
+        ollama_base_url=" http://127.0.0.1:11434/ ",
+        ollama_model=" qwen3:4b ",
+    )
+
+    assert settings.ollama_base_url == "http://127.0.0.1:11434"
+    assert settings.ollama_model == "qwen3:4b"
+
+
+@pytest.mark.parametrize(
+    "origin",
+    ["localhost:11434", "ftp://localhost:11434", "http://localhost:11434/api"],
+)
+def test_settings_reject_invalid_ollama_origin(origin: str) -> None:
+    with pytest.raises(ValidationError, match="ollama_base_url"):
+        Settings(_env_file=None, ollama_base_url=origin)
+
+
+def test_settings_reject_empty_ollama_model() -> None:
+    with pytest.raises(ValidationError, match="ollama_model"):
+        Settings(_env_file=None, ollama_model="   ")

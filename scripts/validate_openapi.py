@@ -1,4 +1,4 @@
-"""Validate the design-first OpenAPI contract for Release 1."""
+"""Validate the design-first OpenAPI contract for implemented releases."""
 
 from __future__ import annotations
 
@@ -46,8 +46,10 @@ EXPECTED_OPERATIONS = {
     ("/statistics/overview", "get"),
     ("/statistics/topics", "get"),
     ("/statistics/activity", "get"),
+    ("/ai/providers", "get"),
     ("/health", "get"),
     ("/health/database", "get"),
+    ("/health/ai", "get"),
 }
 INPUT_SCHEMAS = {
     "CategoryCreate",
@@ -256,8 +258,6 @@ def validate() -> tuple[int, int, int]:
     )
 
     for path in document["paths"]:
-        assert not path.startswith("/ai"), f"AI path is not part of Release 1: {path}"
-        assert path != "/health/ai"
         assert path != "/statistics/weak-areas"
 
     idempotency_users = []
@@ -281,13 +281,14 @@ def validate() -> tuple[int, int, int]:
         "ValidationError",
         "InternalError",
         "DatabaseUnavailable",
+        "AiUnavailable",
     }
     for name in problem_responses:
         content = document["components"]["responses"][name]["content"]
         assert set(content) == {"application/problem+json"}
 
     for path, method, operation in operations:
-        if path == "/health":
+        if path in {"/health", "/ai/providers"}:
             continue
         responses = operation["responses"]
         assert "503" in responses, f"503 response is missing: {method} {path}"

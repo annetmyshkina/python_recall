@@ -50,6 +50,24 @@ def database_unavailable() -> ApiError:
     )
 
 
+def ai_provider_unavailable() -> ApiError:
+    return ApiError(
+        status_code=503,
+        code="ai_provider_unavailable",
+        title="AI provider unavailable",
+        detail="The configured AI provider is temporarily unavailable.",
+    )
+
+
+def ai_model_missing() -> ApiError:
+    return ApiError(
+        status_code=503,
+        code="ai_model_missing",
+        title="AI model unavailable",
+        detail="The configured AI model is not installed.",
+    )
+
+
 def card_archived() -> ApiError:
     return ApiError(
         status_code=409,

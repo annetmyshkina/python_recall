@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from backend.app.ai.manager import AiManager, AiProviderManager
 from backend.app.api.router import build_api_router
 from backend.app.core.config import Settings, get_settings
 from backend.app.core.database import Database
@@ -13,10 +14,12 @@ from backend.app.core.middleware import JsonBodyLimitMiddleware
 def create_app(
     settings: Settings | None = None,
     database: Database | None = None,
+    ai_manager: AiManager | None = None,
 ) -> FastAPI:
     """Create an application instance with explicit, testable configuration."""
     resolved_settings = settings or get_settings()
     resolved_database = database or Database(resolved_settings.database_url)
+    resolved_ai_manager = ai_manager or AiProviderManager(resolved_settings)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -33,10 +36,11 @@ def create_app(
         lifespan=lifespan,
     )
     application.state.database = resolved_database
+    application.state.ai_manager = resolved_ai_manager
     application.add_middleware(JsonBodyLimitMiddleware)
     install_exception_handlers(application)
     application.include_router(
-        build_api_router(resolved_settings, resolved_database),
+        build_api_router(resolved_settings, resolved_database, resolved_ai_manager),
         prefix=resolved_settings.api_v1_prefix,
     )
     return application

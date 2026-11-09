@@ -15,3 +15,11 @@ class DatabaseHealthResponse(ApiSchema):
     """Successful database readiness response."""
 
     status: Literal["ok"]
+
+
+class AiHealthResponse(ApiSchema):
+    """Optional AI readiness; disabled is a healthy core configuration."""
+
+    status: Literal["ok", "disabled"]
+    provider: Literal["ollama"]
+    model: str

@@ -1,15 +1,15 @@
 # Python Recall REST API
 
-- Статус: согласованный контракт этапа 0.3
+- Статус: реализованный контракт Release 1–2 и этапа 3.1
 - Версия API: v1
-- Дата: 2026-11-06
-- Объём: Release 1 Core API
+- Дата: 2026-11-09
+- Объём: Core API и диагностика локального AI-провайдера
 
 ## Назначение
 
-Документ фиксирует внешний HTTP-контракт Release 1: ресурсы базы знаний,
-повторения, базовую статистику и health checks. Он является источником для
-OpenAPI-контракта этапа 0.4.
+Документ фиксирует внешний HTTP-контракт: ресурсы базы знаний, повторения,
+базовую статистику, health checks и постепенно добавляемые возможности AI.
+Он является источником для design-first OpenAPI-контракта.
 
 Машиночитаемая версия: [openapi.yaml](openapi.yaml).
 
@@ -19,8 +19,9 @@ OpenAPI-контракта этапа 0.4.
 - [ADR-001: алгоритм повторений](adr/ADR-001-review-algorithm.md);
 - [ADR-002: жизненный цикл сущностей](adr/ADR-002-entity-lifecycle.md).
 
-AI API не входит в Release 1 и не должен требовать пустых AI-таблиц. Его
-пространство имён зарезервировано до Release 3.
+Специфичные AI-сценарии и их таблицы добавляются поэтапно в Release 3. Этап 3.1
+вводит только настройки, адаптер Ollama и диагностические endpoints; он не
+создаёт AI-таблиц и не меняет состояние карточек.
 
 ## Общие правила
 
@@ -130,6 +131,8 @@ Problem Details.
 | `422` | `validation_error` | Поля или их сочетание не прошли проверку |
 | `500` | `internal_error` | Непредвиденная ошибка без утечки деталей |
 | `503` | `database_unavailable` | PostgreSQL временно недоступен |
+| `503` | `ai_provider_unavailable` | Включённый AI-провайдер недоступен |
+| `503` | `ai_model_missing` | Настроенная AI-модель не установлена |
 
 Ошибки FastAPI/Pydantic приводятся к этому же формату. SQL, traceback, секреты и
 внутренние сообщения провайдеров не возвращаются клиенту.
@@ -603,6 +606,42 @@ Idempotency-Replayed: true
 `/statistics/weak-areas` появится вместе с формальным определением слабой области
 в Release 4 и не входит в OpenAPI Release 1.
 
+## AI provider diagnostics
+
+Этап 3.1 поддерживает один локальный провайдер — Ollama. Наличие AI остаётся
+необязательным: при `AI_ENABLED=false` Core API работает в полном объёме и не
+обращается к Ollama.
+
+| Метод | Endpoint | Назначение |
+|---|---|---|
+| `GET` | `/ai/providers` | Состояние настройки и доступности провайдера |
+
+Endpoint всегда возвращает диагностический ответ `200`, даже если AI отключён,
+Ollama недоступен или модель не установлена. Поле `status` принимает значения:
+
+- `disabled` — AI отключён настройкой;
+- `ready` — Ollama отвечает и настроенная модель установлена;
+- `unavailable` — Ollama недоступен или вернул некорректный ответ;
+- `model_missing` — Ollama доступен, но настроенная модель отсутствует.
+
+Пример отключённого провайдера:
+
+```json
+{
+  "default_provider": "ollama",
+  "items": [
+    {
+      "name": "ollama",
+      "enabled": false,
+      "status": "disabled",
+      "model": "qwen3:4b"
+    }
+  ]
+}
+```
+
+Проверка доступности не запускает генерацию и не загружает модель в память.
+
 ## Health
 
 Health endpoints не используют общий pagination/error envelope для успешного
@@ -612,6 +651,7 @@ Health endpoints не используют общий pagination/error envelope 
 |---|---|---|
 | `GET` | `/health` | Процесс Backend доступен; БД не проверяется |
 | `GET` | `/health/database` | Доступность PostgreSQL простым запросом |
+| `GET` | `/health/ai` | Опциональная доступность Ollama и модели |
 
 Успешный `/health`:
 
@@ -626,8 +666,13 @@ Health endpoints не используют общий pagination/error envelope 
 Успешный `/health/database` возвращает `200` и `{"status": "ok"}`. При сбое —
 `503 database_unavailable` в общем формате Problem Details.
 
-`/health/ai` добавляется в Release 3. Недоступность AI никогда не должна менять
-результат `/health` или `/health/database`.
+`/health/ai` возвращает `200` со статусом `disabled`, если AI отключён, и `200`
+со статусом `ok`, если провайдер готов. Если включённый Ollama недоступен или
+модель отсутствует, endpoint возвращает соответственно
+`503 ai_provider_unavailable` или `503 ai_model_missing`.
+
+Недоступность AI никогда не меняет результат `/health`, `/health/database` и
+Core API.
 
 ## Зарезервированные API будущих релизов
 
@@ -638,21 +683,19 @@ OpenAPI Release 1:
 - `/ai/analyze-card`;
 - `/ai/generate-cards`;
 - `/ai/suggestions`;
-- `/ai/providers`;
 - `/ai/usage`;
 - `/ai/settings`;
-- `/health/ai`;
 - `/statistics/weak-areas`;
 - `/imports` и `/exports`.
 
 Их request/response schema, ошибки, идемпотентность и права на изменение данных
 будут зафиксированы в соответствующих релизах до реализации.
 
-## Проверка контракта Release 1
+## Проверка контракта
 
 OpenAPI должен подтвердить:
 
-- наличие всех Release 1 endpoint и отсутствие незаявленных AI endpoint;
+- точное соответствие заявленных endpoint runtime-маршрутам;
 - единые Problem Details schemas для ошибок;
 - ограничения строк, UUID, enum, пагинации и сочетаний полей;
 - обязательный `Idempotency-Key` только для завершения повторения;
