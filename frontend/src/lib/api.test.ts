@@ -8,6 +8,7 @@ import {
   apiRequest,
   getApiErrorMessage,
   getApiFieldError,
+  isAmbiguousRequestError,
 } from "./api";
 
 type CategoryPage = components["schemas"]["CategoryPage"];
@@ -131,5 +132,30 @@ describe("apiRequest", () => {
       code: "network_error",
       status: 0,
     });
+  });
+
+  it("distinguishes uncertain retries from completed AI errors", () => {
+    const buildError = (code: string, status: number) =>
+      new ApiError({
+        type: `urn:python-recall:error:${code.replaceAll("_", "-")}`,
+        title: "AI error",
+        status,
+        detail: "Provider error",
+        instance: "/api/v1/ai/evaluate-answer",
+        code,
+        trace_id: "trace-id",
+        errors: [],
+      });
+
+    expect(isAmbiguousRequestError(buildError("network_error", 0))).toBe(true);
+    expect(
+      isAmbiguousRequestError(buildError("ai_request_in_progress", 409)),
+    ).toBe(true);
+    expect(
+      isAmbiguousRequestError(buildError("ai_provider_timeout", 504)),
+    ).toBe(false);
+    expect(
+      getApiErrorMessage(buildError("ai_invalid_response", 502)),
+    ).toBe("Ответ ИИ не прошёл проверку. Запустите анализ повторно.");
   });
 });

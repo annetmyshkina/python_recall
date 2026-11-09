@@ -20,6 +20,13 @@ const apiErrorMessages: Record<string, string> = {
   idempotency_conflict:
     "Этот ключ повторного запроса уже использован для другой операции.",
   review_conflict: "Не удалось завершить повторение из-за конфликта данных.",
+  ai_disabled: "ИИ-анализ отключён в настройках приложения.",
+  ai_provider_unavailable: "Ollama временно недоступен.",
+  ai_model_missing: "Настроенная модель Ollama не установлена.",
+  ai_provider_timeout: "Ollama не успел ответить. Запустите анализ повторно.",
+  ai_invalid_response:
+    "Ответ ИИ не прошёл проверку. Запустите анализ повторно.",
+  ai_request_in_progress: "Этот анализ ещё выполняется.",
   validation_error: "Проверьте введённые данные.",
   malformed_request: "Запрос содержит некорректные данные.",
   method_not_allowed: "Эта операция не поддерживается.",
@@ -149,6 +156,13 @@ export function getApiErrorMessage(error: unknown) {
   }
 
   return "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
+}
+
+export function isAmbiguousRequestError(error: unknown) {
+  return (
+    error instanceof ApiError &&
+    (error.code === "network_error" || error.code === "ai_request_in_progress")
+  );
 }
 
 export function getApiFieldError(error: unknown, fieldName: string) {

@@ -166,7 +166,7 @@ async def test_evaluation_is_persisted_replayed_and_read_without_changing_sm2(
         assert result["correctness"] == "partially_correct"
         assert result["completeness"] == 75
         assert result["score"] == 80
-        assert result["prompt_version"] == "answer-evaluator-v1"
+        assert result["prompt_version"] == "answer-evaluator-v2-ru"
 
         replay = await client.post(
             "/api/v1/ai/evaluate-answer",

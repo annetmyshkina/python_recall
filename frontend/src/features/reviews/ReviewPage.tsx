@@ -20,6 +20,7 @@ import {
   createAnswerAttempt,
   getReviewReference,
 } from "./api";
+import { AnswerEvaluationPanel } from "./AnswerEvaluationPanel";
 
 const difficultyLabels: Record<Difficulty, string> = {
   beginner: "Начальная",
@@ -71,7 +72,9 @@ export function ReviewPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
   const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [answerRevision, setAnswerRevision] = useState(0);
   const [reference, setReference] = useState<ReviewReference | null>(null);
+  const [revealError, setRevealError] = useState<unknown>(null);
   const [selectedRating, setSelectedRating] = useState<Rating | null>(null);
   const completionIntentRef = useRef<CompletionIntent | null>(null);
 
@@ -103,7 +106,9 @@ export function ReviewPage() {
   function resetCurrentCard() {
     setUserAnswer("");
     setAttemptId(null);
+    setAnswerRevision(0);
     setReference(null);
+    setRevealError(null);
     setSelectedRating(null);
     completionIntentRef.current = null;
     attemptMutation.reset();
@@ -119,22 +124,45 @@ export function ReviewPage() {
     sessionMutation.mutate();
   }
 
+  async function saveWrittenAttempt() {
+    if (!currentCard || !userAnswer.trim()) {
+      throw new Error("Письменный ответ отсутствует.");
+    }
+    if (attemptId) {
+      return attemptId;
+    }
+    const attempt = await attemptMutation.mutateAsync({
+      cardId: currentCard.id,
+      answer: userAnswer.trim(),
+    });
+    setAttemptId(attempt.id);
+    return attempt.id;
+  }
+
+  function editWrittenAnswer() {
+    if (reference) {
+      return;
+    }
+    setAttemptId(null);
+    setAnswerRevision((revision) => revision + 1);
+    setRevealError(null);
+    attemptMutation.reset();
+  }
+
   async function revealReference() {
     if (!currentCard || referenceMutation.isPending || attemptMutation.isPending) {
       return;
     }
 
+    setRevealError(null);
     try {
-      if (userAnswer.trim() && !attemptId) {
-        const attempt = await attemptMutation.mutateAsync({
-          cardId: currentCard.id,
-          answer: userAnswer.trim(),
-        });
-        setAttemptId(attempt.id);
+      if (userAnswer.trim()) {
+        await saveWrittenAttempt();
       }
       const revealed = await referenceMutation.mutateAsync(currentCard.id);
       setReference(revealed);
-    } catch {
+    } catch (error) {
+      setRevealError(error);
       // Mutation state is rendered below and retry reuses a saved attempt.
     }
   }
@@ -184,8 +212,8 @@ export function ReviewPage() {
           Начать повторение
         </Button>
         <p className="mt-5 text-sm text-slate-500">
-          Анализ с помощью ИИ появится в третьей версии. Обычный режим SM-2
-          работает без ИИ.
+          Для письменного ответа доступен необязательный анализ ИИ. Обычный режим
+          SM-2 работает независимо от него.
         </p>
       </div>
     );
@@ -265,7 +293,6 @@ export function ReviewPage() {
     return null;
   }
 
-  const revealError = attemptMutation.error ?? referenceMutation.error;
   const result = completeMutation.data;
 
   return (
@@ -316,7 +343,7 @@ export function ReviewPage() {
         {!result ? (
           <div className="mt-8 space-y-5">
             <Textarea
-              disabled={Boolean(reference)}
+              disabled={Boolean(reference || attemptId)}
               hint="Необязательно: можно ответить устно или мысленно."
               label="Ваш ответ"
               maxLength={50000}
@@ -324,6 +351,14 @@ export function ReviewPage() {
               placeholder="Сформулируйте ответ своими словами…"
               rows={7}
               value={userAnswer}
+            />
+            <AnswerEvaluationPanel
+              attemptId={attemptId}
+              canEditAnswer={!reference}
+              hasWrittenAnswer={Boolean(userAnswer.trim())}
+              key={`${currentCard.id}:${answerRevision}`}
+              onEditAnswer={editWrittenAnswer}
+              onSaveAttempt={saveWrittenAttempt}
             />
             {!reference ? (
               <Button

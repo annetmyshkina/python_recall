@@ -31,6 +31,13 @@ export type Rating = components["schemas"]["Rating"];
 export type ReviewComplete = components["schemas"]["ReviewComplete"];
 export type ReviewResult = components["schemas"]["ReviewResult"];
 
+export type AiProvider = components["schemas"]["AiProvider"];
+export type AiProviders = components["schemas"]["AiProviders"];
+export type AnswerCorrectness = components["schemas"]["AnswerCorrectness"];
+export type AnswerEvaluation = components["schemas"]["AnswerEvaluation"];
+export type AnswerEvaluationCreate =
+  components["schemas"]["AnswerEvaluationCreate"];
+
 export type StatisticsOverview = components["schemas"]["StatisticsOverview"];
 export type TopicStatistics = components["schemas"]["TopicStatistics"];
 export type TopicStatisticsPage = components["schemas"]["TopicStatisticsPage"];
