@@ -19,12 +19,14 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from backend.app.cards.models import CardDifficulty
 from backend.app.core.database import Base
 from backend.app.core.models import CreatedAtMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from backend.app.cards.models import Card
     from backend.app.reviews.models import AnswerAttempt
+    from backend.app.topics.models import Topic
 
 JSON_DOCUMENT = JSON().with_variant(JSONB(), "postgresql")
 
@@ -51,6 +53,12 @@ class CardQuality(StrEnum):
     GOOD = "good"
     NEEDS_IMPROVEMENT = "needs_improvement"
     NEEDS_REVIEW = "needs_review"
+
+
+class CardSuggestionStatus(StrEnum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
 
 
 class AiRequest(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
@@ -110,6 +118,10 @@ class AiRequest(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     card_analysis: Mapped["CardAnalysis | None"] = relationship(
         back_populates="request",
         uselist=False,
+        passive_deletes=True,
+    )
+    card_suggestions: Mapped[list["CardSuggestion"]] = relationship(
+        back_populates="request",
         passive_deletes=True,
     )
 
@@ -284,3 +296,101 @@ class CardAnalysis(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
 
     request: Mapped[AiRequest] = relationship(back_populates="card_analysis")
     card: Mapped["Card"] = relationship(back_populates="card_analyses")
+
+
+class CardSuggestion(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+    """Generated card draft that requires an explicit user decision."""
+
+    __tablename__ = "ai_suggestions"
+    __table_args__ = (
+        CheckConstraint(
+            "length(btrim(question)) > 0 AND length(question) <= 10000",
+            name="ck_ai_suggestions_question_length",
+        ),
+        CheckConstraint(
+            "length(btrim(answer)) > 0 AND length(answer) <= 50000",
+            name="ck_ai_suggestions_answer_length",
+        ),
+        CheckConstraint(
+            "explanation IS NULL OR length(explanation) <= 50000",
+            name="ck_ai_suggestions_explanation_length",
+        ),
+        CheckConstraint(
+            "code_example IS NULL OR length(code_example) <= 50000",
+            name="ck_ai_suggestions_code_example_length",
+        ),
+        CheckConstraint(
+            "position >= 0 AND position < 10",
+            name="ck_ai_suggestions_position_range",
+        ),
+        CheckConstraint(
+            "(status = 'pending' AND reviewed_at IS NULL "
+            "AND accepted_card_id IS NULL) OR "
+            "(status = 'accepted' AND reviewed_at IS NOT NULL "
+            "AND accepted_card_id IS NOT NULL) OR "
+            "(status = 'rejected' AND reviewed_at IS NOT NULL "
+            "AND accepted_card_id IS NULL)",
+            name="ck_ai_suggestions_status_fields_match",
+        ),
+        UniqueConstraint("accepted_card_id", name="uq_ai_suggestions_accepted_card_id"),
+        UniqueConstraint(
+            "request_id", "position", name="uq_ai_suggestions_request_position"
+        ),
+        Index("ix_ai_suggestions_request_id", "request_id"),
+        Index(
+            "ix_ai_suggestions_status_created",
+            "status",
+            "created_at",
+        ),
+        Index(
+            "ix_ai_suggestions_topic_status_created",
+            "topic_id",
+            "status",
+            "created_at",
+        ),
+    )
+
+    request_id: Mapped[UUID] = mapped_column(
+        ForeignKey("ai_requests.id", ondelete="RESTRICT"), nullable=False
+    )
+    topic_id: Mapped[UUID] = mapped_column(
+        ForeignKey("topics.id", ondelete="RESTRICT"), nullable=False
+    )
+    accepted_card_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("cards.id", ondelete="RESTRICT"), nullable=True
+    )
+    status: Mapped[CardSuggestionStatus] = mapped_column(
+        Enum(
+            CardSuggestionStatus,
+            values_callable=lambda enum: [item.value for item in enum],
+            name="card_suggestion_status",
+            native_enum=False,
+            create_constraint=True,
+        ),
+        nullable=False,
+        default=CardSuggestionStatus.PENDING,
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    answer: Mapped[str] = mapped_column(Text, nullable=False)
+    explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    code_example: Mapped[str | None] = mapped_column(Text, nullable=True)
+    difficulty: Mapped[CardDifficulty] = mapped_column(
+        Enum(
+            CardDifficulty,
+            values_callable=lambda enum: [item.value for item in enum],
+            name="card_suggestion_difficulty",
+            native_enum=False,
+            create_constraint=True,
+        ),
+        nullable=False,
+    )
+    provider: Mapped[str] = mapped_column(String(50), nullable=False)
+    model: Mapped[str] = mapped_column(String(200), nullable=False)
+    prompt_version: Mapped[str] = mapped_column(String(100), nullable=False)
+    reviewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    request: Mapped[AiRequest] = relationship(back_populates="card_suggestions")
+    topic: Mapped["Topic"] = relationship(back_populates="card_suggestions")

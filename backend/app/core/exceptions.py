@@ -122,6 +122,24 @@ def idempotency_conflict() -> ApiError:
     )
 
 
+def suggestion_already_reviewed() -> ApiError:
+    return ApiError(
+        status_code=409,
+        code="suggestion_already_reviewed",
+        title="Предложение уже обработано",
+        detail="Принятое или отклонённое предложение нельзя обработать повторно.",
+    )
+
+
+def suggestion_duplicate() -> ApiError:
+    return ApiError(
+        status_code=409,
+        code="suggestion_duplicate",
+        title="Карточка уже существует",
+        detail="В базе знаний уже есть карточка с таким вопросом.",
+    )
+
+
 def review_conflict(detail: str) -> ApiError:
     return ApiError(
         status_code=409,

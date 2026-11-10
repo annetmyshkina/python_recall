@@ -3,8 +3,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, Header, Query, Response, status
 
-from backend.app.ai import card_analysis_service, service
+from backend.app.ai import card_analysis_service, card_generation_service, service
 from backend.app.ai.manager import AiManager
+from backend.app.ai.models import CardSuggestionStatus
 from backend.app.ai.schemas import (
     AiProviderResponse,
     AiProvidersResponse,
@@ -14,6 +15,10 @@ from backend.app.ai.schemas import (
     CardAnalysisCreate,
     CardAnalysisPage,
     CardAnalysisRead,
+    CardGenerationCreate,
+    CardSuggestionBatchRead,
+    CardSuggestionPage,
+    CardSuggestionRead,
 )
 from backend.app.core.dependencies import SessionDependency
 from backend.app.core.schemas import ProblemDetails
@@ -172,5 +177,94 @@ def build_ai_router(manager: AiManager) -> APIRouter:
         analysis_id: UUID, session: SessionDependency
     ) -> CardAnalysisRead:
         return card_analysis_service.get_analysis(session, analysis_id)
+
+    @router.post(
+        "/generate-cards",
+        operation_id="generate_card_suggestions",
+        response_model=CardSuggestionBatchRead,
+        status_code=status.HTTP_201_CREATED,
+        responses={
+            status.HTTP_200_OK: {"model": CardSuggestionBatchRead},
+            status.HTTP_409_CONFLICT: {"model": ProblemDetails},
+            status.HTTP_502_BAD_GATEWAY: {"model": ProblemDetails},
+            status.HTTP_503_SERVICE_UNAVAILABLE: {"model": ProblemDetails},
+            status.HTTP_504_GATEWAY_TIMEOUT: {"model": ProblemDetails},
+        },
+        summary="Generate pending card suggestions without creating cards",
+    )
+    async def generate_card_suggestions(
+        payload: CardGenerationCreate,
+        response: Response,
+        session: SessionDependency,
+        idempotency_key: Annotated[UUID, Header(alias="Idempotency-Key")],
+    ) -> CardSuggestionBatchRead:
+        batch, replayed = await card_generation_service.generate_card_suggestions(
+            session, payload, idempotency_key, manager
+        )
+        if replayed:
+            response.status_code = status.HTTP_200_OK
+            response.headers["Idempotency-Replayed"] = "true"
+        return batch
+
+    @router.get(
+        "/card-suggestions",
+        operation_id="list_card_suggestions",
+        response_model=CardSuggestionPage,
+        summary="List generated card suggestions",
+    )
+    async def list_card_suggestions(
+        session: SessionDependency,
+        page: Annotated[int, Query(ge=1)] = 1,
+        limit: Annotated[int, Query(ge=1, le=100)] = 20,
+        topic_id: UUID | None = None,
+        suggestion_status: Annotated[
+            CardSuggestionStatus | None, Query(alias="status")
+        ] = None,
+    ) -> CardSuggestionPage:
+        return card_generation_service.list_suggestions(
+            session,
+            page=page,
+            limit=limit,
+            topic_id=topic_id,
+            suggestion_status=suggestion_status,
+        )
+
+    @router.get(
+        "/card-suggestions/{suggestion_id}",
+        operation_id="get_card_suggestion",
+        response_model=CardSuggestionRead,
+        summary="Get one generated card suggestion",
+    )
+    async def get_card_suggestion(
+        suggestion_id: UUID,
+        session: SessionDependency,
+    ) -> CardSuggestionRead:
+        return card_generation_service.get_suggestion(session, suggestion_id)
+
+    @router.post(
+        "/card-suggestions/{suggestion_id}/accept",
+        operation_id="accept_card_suggestion",
+        response_model=CardSuggestionRead,
+        responses={status.HTTP_409_CONFLICT: {"model": ProblemDetails}},
+        summary="Accept one suggestion and create its card transactionally",
+    )
+    async def accept_card_suggestion(
+        suggestion_id: UUID,
+        session: SessionDependency,
+    ) -> CardSuggestionRead:
+        return card_generation_service.accept_suggestion(session, suggestion_id)
+
+    @router.post(
+        "/card-suggestions/{suggestion_id}/reject",
+        operation_id="reject_card_suggestion",
+        response_model=CardSuggestionRead,
+        responses={status.HTTP_409_CONFLICT: {"model": ProblemDetails}},
+        summary="Reject one pending card suggestion",
+    )
+    async def reject_card_suggestion(
+        suggestion_id: UUID,
+        session: SessionDependency,
+    ) -> CardSuggestionRead:
+        return card_generation_service.reject_suggestion(session, suggestion_id)
 
     return router

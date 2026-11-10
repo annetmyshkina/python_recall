@@ -8,6 +8,7 @@ from backend.app.models import CardDifficulty, ReviewRating
 EXPECTED_TABLES = {
     "ai_requests",
     "ai_usage_logs",
+    "ai_suggestions",
     "answer_attempts",
     "answer_evaluations",
     "card_tags",
@@ -47,6 +48,9 @@ def test_foreign_keys_enforce_documented_delete_rules() -> None:
         ("ai_usage_logs", "request_id"): "RESTRICT",
         ("card_analyses", "request_id"): "RESTRICT",
         ("card_analyses", "card_id"): "RESTRICT",
+        ("ai_suggestions", "request_id"): "RESTRICT",
+        ("ai_suggestions", "topic_id"): "RESTRICT",
+        ("ai_suggestions", "accepted_card_id"): "RESTRICT",
     }
 
     actual = {}
@@ -89,6 +93,7 @@ def test_ai_tables_have_idempotency_and_range_guards() -> None:
     requests = Base.metadata.tables["ai_requests"]
     evaluations = Base.metadata.tables["answer_evaluations"]
     usage = Base.metadata.tables["ai_usage_logs"]
+    suggestions = Base.metadata.tables["ai_suggestions"]
 
     request_checks = {
         constraint.name
@@ -105,8 +110,15 @@ def test_ai_tables_have_idempotency_and_range_guards() -> None:
         for constraint in usage.constraints
         if isinstance(constraint, CheckConstraint)
     }
+    suggestion_checks = {
+        constraint.name
+        for constraint in suggestions.constraints
+        if isinstance(constraint, CheckConstraint)
+    }
 
     assert "ck_ai_requests_status_fields_match" in request_checks
     assert "ck_answer_evaluations_score_range" in evaluation_checks
     assert "ck_answer_evaluations_completeness_range" in evaluation_checks
     assert "ck_ai_usage_logs_tokens_nonnegative" in usage_checks
+    assert "ck_ai_suggestions_status_fields_match" in suggestion_checks
+    assert "ck_ai_suggestions_position_range" in suggestion_checks

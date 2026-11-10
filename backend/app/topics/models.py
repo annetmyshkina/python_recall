@@ -8,6 +8,7 @@ from backend.app.core.database import Base
 from backend.app.core.models import TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
+    from backend.app.ai.models import CardSuggestion
     from backend.app.cards.models import Card
     from backend.app.categories.models import Category
 
@@ -41,6 +42,10 @@ class Topic(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     category: Mapped["Category"] = relationship(back_populates="topics")
     cards: Mapped[list["Card"]] = relationship(
+        back_populates="topic",
+        passive_deletes=True,
+    )
+    card_suggestions: Mapped[list["CardSuggestion"]] = relationship(
         back_populates="topic",
         passive_deletes=True,
     )

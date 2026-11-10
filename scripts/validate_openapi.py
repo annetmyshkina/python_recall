@@ -53,6 +53,11 @@ EXPECTED_OPERATIONS = {
     ("/ai/analyze-card", "post"),
     ("/ai/card-analyses", "get"),
     ("/ai/card-analyses/{analysis_id}", "get"),
+    ("/ai/generate-cards", "post"),
+    ("/ai/card-suggestions", "get"),
+    ("/ai/card-suggestions/{suggestion_id}", "get"),
+    ("/ai/card-suggestions/{suggestion_id}/accept", "post"),
+    ("/ai/card-suggestions/{suggestion_id}/reject", "post"),
     ("/health", "get"),
     ("/health/database", "get"),
     ("/health/ai", "get"),
@@ -73,6 +78,7 @@ INPUT_SCHEMAS = {
     "AnswerAttemptCreate",
     "AnswerEvaluationCreate",
     "CardAnalysisCreate",
+    "CardGenerationCreate",
     "ReviewComplete",
 }
 PATH_PARAMETER_PATTERN = re.compile(r"\{([^{}]+)\}")
@@ -277,6 +283,7 @@ def validate() -> tuple[int, int, int]:
         ("/reviews/{card_id}/complete", "post"),
         ("/ai/evaluate-answer", "post"),
         ("/ai/analyze-card", "post"),
+        ("/ai/generate-cards", "post"),
     }
 
     schemas = document["components"]["schemas"]

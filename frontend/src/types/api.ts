@@ -39,6 +39,12 @@ export type AnswerEvaluationCreate =
   components["schemas"]["AnswerEvaluationCreate"];
 export type CardAnalysis = components["schemas"]["CardAnalysis"];
 export type CardAnalysisCreate = components["schemas"]["CardAnalysisCreate"];
+export type CardGenerationCreate = components["schemas"]["CardGenerationCreate"];
+export type CardSuggestion = components["schemas"]["CardSuggestion"];
+export type CardSuggestionBatch = components["schemas"]["CardSuggestionBatch"];
+export type CardSuggestionPage = components["schemas"]["CardSuggestionPage"];
+export type CardSuggestionStatus =
+  components["schemas"]["CardSuggestionStatus"];
 
 export type StatisticsOverview = components["schemas"]["StatisticsOverview"];
 export type TopicStatistics = components["schemas"]["TopicStatistics"];

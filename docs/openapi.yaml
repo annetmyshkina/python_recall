@@ -1047,6 +1047,128 @@ paths:
         "500": { $ref: "#/components/responses/InternalError" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
 
+  /ai/generate-cards:
+    post:
+      tags: [AI]
+      operationId: generate_card_suggestions
+      summary: Generate pending card suggestions without creating cards
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CardGenerationCreate" }
+      responses:
+        "201":
+          description: Card suggestions generated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardSuggestionBatch" }
+        "200":
+          description: Saved generation result replayed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardSuggestionBatch" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "500": { $ref: "#/components/responses/InternalError" }
+        "502": { $ref: "#/components/responses/AiInvalidResponse" }
+        "503": { $ref: "#/components/responses/AiUnavailable" }
+        "504": { $ref: "#/components/responses/AiTimeout" }
+
+  /ai/card-suggestions:
+    get:
+      tags: [AI]
+      operationId: list_card_suggestions
+      summary: List generated card suggestions
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: topic_id
+          in: query
+          required: false
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          required: false
+          schema: { $ref: "#/components/schemas/CardSuggestionStatus" }
+      responses:
+        "200":
+          description: Paginated card suggestions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardSuggestionPage" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "500": { $ref: "#/components/responses/InternalError" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+
+  /ai/card-suggestions/{suggestion_id}:
+    parameters:
+      - name: suggestion_id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [AI]
+      operationId: get_card_suggestion
+      summary: Get one generated card suggestion
+      responses:
+        "200":
+          description: Generated card suggestion
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardSuggestion" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+
+  /ai/card-suggestions/{suggestion_id}/accept:
+    parameters:
+      - name: suggestion_id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [AI]
+      operationId: accept_card_suggestion
+      summary: Accept one suggestion and create its card transactionally
+      responses:
+        "200":
+          description: Suggestion accepted and card created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardSuggestion" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "500": { $ref: "#/components/responses/InternalError" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+
+  /ai/card-suggestions/{suggestion_id}/reject:
+    parameters:
+      - name: suggestion_id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [AI]
+      operationId: reject_card_suggestion
+      summary: Reject one pending card suggestion
+      responses:
+        "200":
+          description: Suggestion rejected
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardSuggestion" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "500": { $ref: "#/components/responses/InternalError" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+
   /health:
     get:
       tags: [Health]
@@ -1517,6 +1639,69 @@ components:
         items:
           type: array
           items: { $ref: "#/components/schemas/CardAnalysis" }
+        pagination: { $ref: "#/components/schemas/Pagination" }
+
+    CardGenerationCreate:
+      type: object
+      additionalProperties: false
+      required: [topic_id]
+      properties:
+        topic_id: { type: string, format: uuid }
+        source_text:
+          type: [string, "null"]
+          maxLength: 20000
+          default: null
+        count:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+
+    CardSuggestionStatus:
+      type: string
+      enum: [pending, accepted, rejected]
+
+    CardSuggestion:
+      type: object
+      additionalProperties: false
+      required: [id, request_id, topic_id, accepted_card_id, status, position, question, answer, explanation, code_example, difficulty, provider, model, prompt_version, reviewed_at, created_at]
+      properties:
+        id: { type: string, format: uuid, readOnly: true }
+        request_id: { type: string, format: uuid, readOnly: true }
+        topic_id: { type: string, format: uuid }
+        accepted_card_id: { type: [string, "null"], format: uuid, readOnly: true }
+        status: { $ref: "#/components/schemas/CardSuggestionStatus" }
+        position: { type: integer, minimum: 0, maximum: 9 }
+        question: { type: string, minLength: 1, maxLength: 10000 }
+        answer: { type: string, minLength: 1, maxLength: 50000 }
+        explanation: { type: [string, "null"], maxLength: 50000 }
+        code_example: { type: [string, "null"], maxLength: 50000 }
+        difficulty: { $ref: "#/components/schemas/Difficulty" }
+        provider: { type: string }
+        model: { type: string }
+        prompt_version: { type: string }
+        reviewed_at: { type: [string, "null"], format: date-time, readOnly: true }
+        created_at: { type: string, format: date-time, readOnly: true }
+
+    CardSuggestionBatch:
+      type: object
+      additionalProperties: false
+      required: [request_id, items]
+      properties:
+        request_id: { type: string, format: uuid, readOnly: true }
+        items:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/CardSuggestion" }
+
+    CardSuggestionPage:
+      type: object
+      additionalProperties: false
+      required: [items, pagination]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/CardSuggestion" }
         pagination: { $ref: "#/components/schemas/Pagination" }
 
     Category:

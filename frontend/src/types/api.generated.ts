@@ -440,6 +440,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ai/generate-cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate pending card suggestions without creating cards */
+        post: operations["generate_card_suggestions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai/card-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List generated card suggestions */
+        get: operations["list_card_suggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai/card-suggestions/{suggestion_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_id: string;
+            };
+            cookie?: never;
+        };
+        /** Get one generated card suggestion */
+        get: operations["get_card_suggestion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai/card-suggestions/{suggestion_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept one suggestion and create its card transactionally */
+        post: operations["accept_card_suggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai/card-suggestions/{suggestion_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject one pending card suggestion */
+        post: operations["reject_card_suggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -611,6 +702,49 @@ export interface components {
         };
         CardAnalysisPage: {
             items: components["schemas"]["CardAnalysis"][];
+            pagination: components["schemas"]["Pagination"];
+        };
+        CardGenerationCreate: {
+            /** Format: uuid */
+            topic_id: string;
+            /** @default null */
+            source_text: string | null;
+            /** @default 5 */
+            count: number;
+        };
+        /** @enum {string} */
+        CardSuggestionStatus: "pending" | "accepted" | "rejected";
+        CardSuggestion: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly request_id: string;
+            /** Format: uuid */
+            topic_id: string;
+            /** Format: uuid */
+            readonly accepted_card_id: string | null;
+            status: components["schemas"]["CardSuggestionStatus"];
+            position: number;
+            question: string;
+            answer: string;
+            explanation: string | null;
+            code_example: string | null;
+            difficulty: components["schemas"]["Difficulty"];
+            provider: string;
+            model: string;
+            prompt_version: string;
+            /** Format: date-time */
+            readonly reviewed_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        CardSuggestionBatch: {
+            /** Format: uuid */
+            readonly request_id: string;
+            items: components["schemas"]["CardSuggestion"][];
+        };
+        CardSuggestionPage: {
+            items: components["schemas"]["CardSuggestion"][];
             pagination: components["schemas"]["Pagination"];
         };
         Category: {
@@ -2082,6 +2216,157 @@ export interface operations {
                 };
             };
             404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["DatabaseUnavailable"];
+        };
+    };
+    generate_card_suggestions: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Client-generated UUID unique to one command intent. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CardGenerationCreate"];
+            };
+        };
+        responses: {
+            /** @description Saved generation result replayed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardSuggestionBatch"];
+                };
+            };
+            /** @description Card suggestions generated */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardSuggestionBatch"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            422: components["responses"]["ValidationError"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["AiInvalidResponse"];
+            503: components["responses"]["AiUnavailable"];
+            504: components["responses"]["AiTimeout"];
+        };
+    };
+    list_card_suggestions: {
+        parameters: {
+            query?: {
+                page?: components["parameters"]["Page"];
+                limit?: components["parameters"]["Limit"];
+                topic_id?: string;
+                status?: components["schemas"]["CardSuggestionStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated card suggestions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardSuggestionPage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            422: components["responses"]["ValidationError"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["DatabaseUnavailable"];
+        };
+    };
+    get_card_suggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Generated card suggestion */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardSuggestion"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["DatabaseUnavailable"];
+        };
+    };
+    accept_card_suggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Suggestion accepted and card created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardSuggestion"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["DatabaseUnavailable"];
+        };
+    };
+    reject_card_suggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Suggestion rejected */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardSuggestion"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             500: components["responses"]["InternalError"];
             503: components["responses"]["DatabaseUnavailable"];
         };

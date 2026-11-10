@@ -2,14 +2,17 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from backend.app.ai.models import (
     AnswerCorrectness,
     AnswerEvaluation,
     CardAnalysis,
     CardQuality,
+    CardSuggestion,
+    CardSuggestionStatus,
 )
+from backend.app.cards.models import CardDifficulty
 from backend.app.core.schemas import ApiSchema, Page
 
 AiProviderName = Literal["ollama"]
@@ -123,3 +126,49 @@ class CardAnalysisPage(Page[CardAnalysisRead]):
 
 def card_analysis_to_read(analysis: CardAnalysis) -> CardAnalysisRead:
     return CardAnalysisRead.model_validate(analysis)
+
+
+class CardGenerationCreate(ApiSchema):
+    topic_id: UUID
+    source_text: str | None = Field(default=None, max_length=20000)
+    count: int = Field(default=5, ge=1, le=10)
+
+    @field_validator("source_text")
+    @classmethod
+    def normalize_source_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class CardSuggestionRead(ApiSchema):
+    id: UUID
+    request_id: UUID
+    topic_id: UUID
+    accepted_card_id: UUID | None
+    status: CardSuggestionStatus
+    position: int = Field(ge=0, le=9)
+    question: str
+    answer: str
+    explanation: str | None
+    code_example: str | None
+    difficulty: CardDifficulty
+    provider: str
+    model: str
+    prompt_version: str
+    reviewed_at: datetime | None
+    created_at: datetime
+
+
+class CardSuggestionBatchRead(ApiSchema):
+    request_id: UUID
+    items: list[CardSuggestionRead]
+
+
+class CardSuggestionPage(Page[CardSuggestionRead]):
+    pass
+
+
+def card_suggestion_to_read(suggestion: CardSuggestion) -> CardSuggestionRead:
+    return CardSuggestionRead.model_validate(suggestion)
