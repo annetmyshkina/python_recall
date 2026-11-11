@@ -22,6 +22,7 @@ describe("AppShell", () => {
       screen.getByRole("link", { name: "Темы" }),
       screen.getByRole("link", { name: "Повторение" }),
       screen.getByRole("link", { name: "Статистика" }),
+      screen.getByRole("link", { name: "ИИ-наставник" }),
     ];
 
     for (const link of links) {

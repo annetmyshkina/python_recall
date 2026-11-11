@@ -33,6 +33,8 @@ export type ReviewResult = components["schemas"]["ReviewResult"];
 
 export type AiProvider = components["schemas"]["AiProvider"];
 export type AiProviders = components["schemas"]["AiProviders"];
+export type AiUsageSummary = components["schemas"]["AiUsageSummary"];
+export type AiUsageScenario = components["schemas"]["AiUsageScenario"];
 export type AnswerCorrectness = components["schemas"]["AnswerCorrectness"];
 export type AnswerEvaluation = components["schemas"]["AnswerEvaluation"];
 export type AnswerEvaluationCreate =
@@ -45,6 +47,9 @@ export type CardSuggestionBatch = components["schemas"]["CardSuggestionBatch"];
 export type CardSuggestionPage = components["schemas"]["CardSuggestionPage"];
 export type CardSuggestionStatus =
   components["schemas"]["CardSuggestionStatus"];
+export type CardSuggestionListParams = NonNullable<
+  operations["list_card_suggestions"]["parameters"]["query"]
+>;
 
 export type StatisticsOverview = components["schemas"]["StatisticsOverview"];
 export type TopicStatistics = components["schemas"]["TopicStatistics"];

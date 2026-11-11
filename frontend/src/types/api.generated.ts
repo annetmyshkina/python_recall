@@ -336,6 +336,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ai/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get aggregate local AI usage without prompt contents or cost */
+        get: operations["get_ai_usage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ai/evaluate-answer": {
         parameters: {
             query?: never;
@@ -627,6 +644,26 @@ export interface components {
             status: "ok" | "disabled";
             provider: components["schemas"]["AiProviderName"];
             model: string;
+        };
+        AiUsageScenario: {
+            scenario: string;
+            request_count: number;
+            success_count: number;
+            error_count: number;
+            input_tokens: number;
+            output_tokens: number;
+            total_tokens: number;
+        };
+        AiUsageSummary: {
+            request_count: number;
+            success_count: number;
+            error_count: number;
+            input_tokens: number;
+            output_tokens: number;
+            total_tokens: number;
+            items: components["schemas"]["AiUsageScenario"][];
+            /** Format: date-time */
+            readonly generated_at: string;
         };
         /** @enum {string} */
         AnswerCorrectness: "correct" | "partially_correct" | "incorrect" | "needs_review";
@@ -2020,6 +2057,28 @@ export interface operations {
                 };
             };
             500: components["responses"]["InternalError"];
+        };
+    };
+    get_ai_usage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Aggregate usage by AI scenario */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiUsageSummary"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["DatabaseUnavailable"];
         };
     };
     evaluate_answer: {

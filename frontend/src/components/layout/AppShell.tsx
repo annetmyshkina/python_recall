@@ -7,6 +7,7 @@ const navigation = [
   { to: "/topics", label: "Темы" },
   { to: "/review", label: "Повторение" },
   { to: "/statistics", label: "Статистика" },
+  { to: "/ai", label: "ИИ-наставник" },
 ] as const;
 
 export function AppShell({ children }: PropsWithChildren) {

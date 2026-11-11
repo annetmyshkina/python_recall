@@ -27,6 +27,17 @@ services:
       APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
       APP_NEW_CARDS_PER_DAY: ${APP_NEW_CARDS_PER_DAY:-20}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-python_recall}:${POSTGRES_PASSWORD:-python_recall}@postgres:5432/${POSTGRES_DB:-python_recall}
+      AI_ENABLED: ${AI_ENABLED:-false}
+      AI_PROVIDER: ${AI_PROVIDER:-ollama}
+      OLLAMA_BASE_URL: ${COMPOSE_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:4b}
+      AI_TIMEOUT_SECONDS: ${AI_TIMEOUT_SECONDS:-120}
+      AI_KEEP_ALIVE: ${AI_KEEP_ALIVE:-5m}
+      AI_MAX_OUTPUT_TOKENS: ${AI_MAX_OUTPUT_TOKENS:-1024}
+      AI_MAX_RESPONSE_BYTES: ${AI_MAX_RESPONSE_BYTES:-1048576}
+      AI_TEMPERATURE: ${AI_TEMPERATURE:-0}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:

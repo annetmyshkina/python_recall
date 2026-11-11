@@ -27,6 +27,8 @@ const apiErrorMessages: Record<string, string> = {
   ai_invalid_response:
     "Ответ ИИ не прошёл проверку. Запустите анализ повторно.",
   ai_request_in_progress: "Этот анализ ещё выполняется.",
+  suggestion_already_reviewed: "Это предложение уже принято или отклонено.",
+  suggestion_duplicate: "Карточка с таким вопросом уже существует.",
   validation_error: "Проверьте введённые данные.",
   malformed_request: "Запрос содержит некорректные данные.",
   method_not_allowed: "Эта операция не поддерживается.",

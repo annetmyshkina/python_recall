@@ -3,12 +3,18 @@ from uuid import UUID
 
 from fastapi import APIRouter, Header, Query, Response, status
 
-from backend.app.ai import card_analysis_service, card_generation_service, service
+from backend.app.ai import (
+    card_analysis_service,
+    card_generation_service,
+    service,
+    usage_service,
+)
 from backend.app.ai.manager import AiManager
 from backend.app.ai.models import CardSuggestionStatus
 from backend.app.ai.schemas import (
     AiProviderResponse,
     AiProvidersResponse,
+    AiUsageSummaryRead,
     AnswerEvaluationCreate,
     AnswerEvaluationPage,
     AnswerEvaluationRead,
@@ -47,6 +53,15 @@ def build_ai_router(manager: AiManager) -> APIRouter:
                 )
             ],
         )
+
+    @router.get(
+        "/usage",
+        operation_id="get_ai_usage",
+        response_model=AiUsageSummaryRead,
+        summary="Get aggregate local AI usage without prompt contents or cost",
+    )
+    async def get_ai_usage(session: SessionDependency) -> AiUsageSummaryRead:
+        return usage_service.get_usage_summary(session)
 
     @router.post(
         "/evaluate-answer",

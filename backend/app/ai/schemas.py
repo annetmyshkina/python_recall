@@ -35,6 +35,27 @@ class AiProvidersResponse(ApiSchema):
     items: list[AiProviderResponse] = Field(min_length=1, max_length=1)
 
 
+class AiUsageScenarioRead(ApiSchema):
+    scenario: str
+    request_count: int = Field(ge=0)
+    success_count: int = Field(ge=0)
+    error_count: int = Field(ge=0)
+    input_tokens: int = Field(ge=0)
+    output_tokens: int = Field(ge=0)
+    total_tokens: int = Field(ge=0)
+
+
+class AiUsageSummaryRead(ApiSchema):
+    request_count: int = Field(ge=0)
+    success_count: int = Field(ge=0)
+    error_count: int = Field(ge=0)
+    input_tokens: int = Field(ge=0)
+    output_tokens: int = Field(ge=0)
+    total_tokens: int = Field(ge=0)
+    items: list[AiUsageScenarioRead]
+    generated_at: datetime
+
+
 class AnswerEvaluationCreate(ApiSchema):
     """Select one previously saved learner answer for analysis."""
 

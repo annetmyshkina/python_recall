@@ -410,3 +410,46 @@ async def test_accept_rolls_back_card_when_suggestion_update_fails(
         assert suggestion.status == CardSuggestionStatus.PENDING
         assert suggestion.accepted_card_id is None
         assert session.scalar(select(func.count(Card.id))) == 0
+
+
+@pytest.mark.asyncio
+async def test_usage_summary_counts_success_errors_and_tokens_by_scenario(
+    test_database: Database,
+) -> None:
+    manager = FakeGenerationManager({"cards": [generated_card("Как считается usage?")]})
+    async with ai_client(test_database, manager) as client:
+        topic = await create_topic(client)
+        success = await client.post(
+            "/api/v1/ai/generate-cards",
+            json={"topic_id": topic["id"], "count": 1},
+            headers={"Idempotency-Key": str(uuid4())},
+        )
+        manager.outcome = AiProviderTimeoutError("private timeout")
+        failed = await client.post(
+            "/api/v1/ai/generate-cards",
+            json={"topic_id": topic["id"], "count": 1, "source_text": "Новый запрос"},
+            headers={"Idempotency-Key": str(uuid4())},
+        )
+        usage = await client.get("/api/v1/ai/usage")
+
+    assert success.status_code == 201
+    assert failed.status_code == 504
+    assert usage.status_code == 200
+    result = usage.json()
+    assert result["request_count"] == 2
+    assert result["success_count"] == 1
+    assert result["error_count"] == 1
+    assert result["input_tokens"] == 100
+    assert result["output_tokens"] == 60
+    assert result["total_tokens"] == 160
+    assert result["items"] == [
+        {
+            "scenario": "card_generation",
+            "request_count": 2,
+            "success_count": 1,
+            "error_count": 1,
+            "input_tokens": 100,
+            "output_tokens": 60,
+            "total_tokens": 160,
+        }
+    ]

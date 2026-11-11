@@ -27,7 +27,10 @@ export const queryKeys = {
     due: (limit?: number) => ["reviews", "due", { limit }] as const,
   },
   ai: {
+    all: ["ai"] as const,
     providers: ["ai", "providers"] as const,
+    usage: ["ai", "usage"] as const,
+    suggestions: (params: object) => ["ai", "suggestions", params] as const,
   },
   statistics: {
     all: ["statistics"] as const,
