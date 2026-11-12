@@ -16,6 +16,8 @@
 - [ADR-002](adr/ADR-002-entity-lifecycle.md) — жизненный цикл сущностей;
 - [ADR-003](adr/ADR-003-frontend-architecture.md) — архитектура Frontend;
 - [ADR-004](adr/ADR-004-ai-architecture.md) — архитектура AI-модуля Release 3.
+- [ADR-005](adr/ADR-005-adaptive-learning-architecture.md) — границы
+  адаптивного обучения Release 4.
 
 ## Архитектурные границы
 

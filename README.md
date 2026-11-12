@@ -246,6 +246,7 @@ sudo systemctl start ollama
 - [OpenAPI 3.1](docs/openapi.yaml)
 - [План Release 2](docs/release-2-plan.md)
 - [План Release 3](docs/release-3-plan.md)
+- [План Release 4](docs/release-4-plan.md)
 - [ADR](docs/adr/)
 
 В Release 1 реализованы Backend API, миграции, CRUD базы знаний, SM-2, Review
