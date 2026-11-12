@@ -103,6 +103,47 @@ async def test_structured_generation_sends_schema_and_validates_result() -> None
 
 
 @pytest.mark.asyncio
+async def test_structured_generation_repairs_one_invalid_result() -> None:
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        payload = json.loads(request.content)
+        if calls == 1:
+            content = json.dumps({"verdict": "correct"})
+            prompt_tokens, output_tokens, duration = 20, 5, 100
+        else:
+            assert len(payload["messages"]) == 4
+            assert payload["messages"][-2]["role"] == "assistant"
+            assert "Ошибки проверки" in payload["messages"][-1]["content"]
+            content = json.dumps({"verdict": "correct", "confidence": 0.9})
+            prompt_tokens, output_tokens, duration = 35, 8, 200
+        return httpx.Response(
+            200,
+            json={
+                "model": "qwen3:4b",
+                "message": {"role": "assistant", "content": content},
+                "prompt_eval_count": prompt_tokens,
+                "eval_count": output_tokens,
+                "total_duration": duration,
+            },
+        )
+
+    provider = build_provider(httpx.MockTransport(handler))
+    result = await provider.generate_structured(
+        StructuredRequest("test", "Return JSON.", "Evaluate this."),
+        ExampleResult,
+    )
+
+    assert calls == 2
+    assert result.data == ExampleResult(verdict="correct", confidence=0.9)
+    assert result.usage.input_tokens == 55
+    assert result.usage.output_tokens == 13
+    assert result.usage.total_duration_ns == 300
+
+
+@pytest.mark.asyncio
 async def test_provider_maps_timeout_without_leaking_transport_error() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         raise httpx.ReadTimeout("private transport detail", request=request)

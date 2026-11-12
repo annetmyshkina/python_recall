@@ -19,6 +19,7 @@ from backend.app.ai.providers.base import StructuredRequest
 from backend.app.ai.providers.errors import AiProviderError
 from backend.app.ai.scenarios.card_analyzer import (
     PROMPT_VERSION,
+    REPAIR_PROMPT,
     SYSTEM_PROMPT,
     CardAnalysisOutput,
     build_user_prompt,
@@ -138,6 +139,7 @@ async def analyze_card(
                 scenario=SCENARIO,
                 system_prompt=SYSTEM_PROMPT,
                 user_prompt=build_user_prompt(**source),
+                repair_prompt=REPAIR_PROMPT,
             ),
             CardAnalysisOutput,
         )

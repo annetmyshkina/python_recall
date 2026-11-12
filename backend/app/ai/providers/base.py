@@ -13,6 +13,7 @@ class StructuredRequest:
     scenario: str
     system_prompt: str
     user_prompt: str
+    repair_prompt: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

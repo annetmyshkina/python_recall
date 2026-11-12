@@ -1,10 +1,19 @@
 import json
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 from backend.app.ai.models import CardQuality
 from backend.app.cards.models import CardDifficulty
+
+from .language import require_russian_text
 
 PROMPT_VERSION = "card-analyzer-v2-ru"
 ShortText = Annotated[
@@ -25,6 +34,14 @@ answer, explanation или code_example есть проблема уровня w
 не объявляй факт ошибочным, если не уверен: используй needs_review.
 Никогда не изменяй карточку и не выбирай действия за пользователя."""
 
+REPAIR_PROMPT = """Если issues содержит warning или critical, quality не может
+быть good: используй needs_improvement или needs_review. Для каждой такой
+проблемы поля question, answer, explanation или code_example обязательно заполни
+соответствующее поле suggested_question, suggested_answer,
+suggested_explanation или suggested_code_example готовым исправленным текстом.
+Верни все четыре поля suggested_*, используя null там, где исправления нет.
+Все сообщения, обратную связь и рекомендации пиши только на русском языке."""
+
 
 class CardIssue(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -32,6 +49,8 @@ class CardIssue(BaseModel):
     field: Literal["question", "answer", "explanation", "code_example", "general"]
     severity: Literal["info", "warning", "critical"]
     message: ShortText
+
+    _require_russian_message = field_validator("message")(require_russian_text)
 
 
 class CardAnalysisOutput(BaseModel):
@@ -50,6 +69,10 @@ class CardAnalysisOutput(BaseModel):
     suggested_answer: str | None = Field(default=None, max_length=50000)
     suggested_explanation: str | None = Field(default=None, max_length=50000)
     suggested_code_example: str | None = Field(default=None, max_length=50000)
+
+    _require_russian_prose = field_validator("feedback", "recommendation")(
+        require_russian_text
+    )
 
     @model_validator(mode="after")
     def require_consistent_suggestions(self) -> "CardAnalysisOutput":

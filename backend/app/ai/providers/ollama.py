@@ -114,12 +114,13 @@ class OllamaProvider:
         request: StructuredRequest,
         response_model: type[StructuredModelT],
     ) -> StructuredResult[StructuredModelT]:
+        messages = [
+            {"role": "system", "content": request.system_prompt},
+            {"role": "user", "content": request.user_prompt},
+        ]
         payload = {
             "model": self.model,
-            "messages": [
-                {"role": "system", "content": request.system_prompt},
-                {"role": "user", "content": request.user_prompt},
-            ],
+            "messages": messages,
             "stream": False,
             "think": False,
             "format": response_model.model_json_schema(),
@@ -132,17 +133,72 @@ class OllamaProvider:
         response = await self._request("POST", "/api/chat", json=payload)
         try:
             chat = _OllamaChatResponse.model_validate_json(response.content)
-            data = response_model.model_validate_json(chat.message.content)
         except ValidationError as error:
             raise AiProviderResponseError("Invalid structured AI response") from error
+
+        try:
+            data = response_model.model_validate_json(chat.message.content)
+        except ValidationError as first_error:
+            validation_errors = first_error.json(
+                include_input=False,
+                include_url=False,
+            )[:4000]
+            repair_instruction = (
+                "ОБЯЗАТЕЛЬНО ИЗМЕНИ предыдущий JSON, не повторяй его. Он нарушил "
+                "схему или правила проверки. Исправь все нарушения одновременно "
+                "и верни полный JSON без дополнительного текста. Сохрани язык, "
+                "заданный системной инструкцией. "
+                f"{request.repair_prompt or ''} Ошибки проверки: "
+                f"{validation_errors}"
+            )
+            repair_payload = {
+                **payload,
+                "messages": [
+                    *messages,
+                    {"role": "assistant", "content": chat.message.content},
+                    {"role": "user", "content": repair_instruction},
+                ],
+            }
+            repair_response = await self._request(
+                "POST",
+                "/api/chat",
+                json=repair_payload,
+            )
+            try:
+                repaired_chat = _OllamaChatResponse.model_validate_json(
+                    repair_response.content
+                )
+                data = response_model.model_validate_json(repaired_chat.message.content)
+            except ValidationError as error:
+                raise AiProviderResponseError(
+                    "Invalid structured AI response"
+                ) from error
+            usage = ProviderUsage(
+                input_tokens=(chat.prompt_eval_count + repaired_chat.prompt_eval_count),
+                output_tokens=chat.eval_count + repaired_chat.eval_count,
+                total_duration_ns=_sum_optional_durations(
+                    chat.total_duration,
+                    repaired_chat.total_duration,
+                ),
+            )
+            model = repaired_chat.model
+        else:
+            usage = ProviderUsage(
+                input_tokens=chat.prompt_eval_count,
+                output_tokens=chat.eval_count,
+                total_duration_ns=chat.total_duration,
+            )
+            model = chat.model
 
         return StructuredResult(
             data=data,
             provider=self.name,
-            model=chat.model,
-            usage=ProviderUsage(
-                input_tokens=chat.prompt_eval_count,
-                output_tokens=chat.eval_count,
-                total_duration_ns=chat.total_duration,
-            ),
+            model=model,
+            usage=usage,
         )
+
+
+def _sum_optional_durations(first: int | None, second: int | None) -> int | None:
+    if first is None and second is None:
+        return None
+    return (first or 0) + (second or 0)

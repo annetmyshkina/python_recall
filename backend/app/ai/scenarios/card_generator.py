@@ -5,6 +5,8 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 
 from backend.app.cards.models import CardDifficulty
 
+from .language import require_russian_text
+
 PROMPT_VERSION = "card-generator-v1-ru"
 
 QuestionText = Annotated[
@@ -35,6 +37,8 @@ class GeneratedCardDraft(BaseModel):
     explanation: str | None = Field(default=None, max_length=50000)
     code_example: str | None = Field(default=None, max_length=50000)
     difficulty: CardDifficulty
+
+    _require_russian_card = field_validator("question", "answer")(require_russian_text)
 
     @field_validator("explanation", "code_example")
     @classmethod

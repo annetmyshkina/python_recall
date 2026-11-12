@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help sync lock lock-check run lint format format-check openapi-check migration-sql-check migrate migration-check test test-cov check release-check release-2-check frontend-sync frontend-install frontend-run frontend-api-generate frontend-check smoke-crud smoke-reviews smoke-frontend compose-smoke compose-config compose-up compose-down compose-logs
+.PHONY: help sync lock lock-check run lint format format-check openapi-check migration-sql-check migrate migration-check test test-cov check release-check release-2-check release-3-check frontend-sync frontend-install frontend-run frontend-api-generate frontend-check smoke-crud smoke-reviews smoke-ai-fake smoke-ai-live smoke-frontend compose-smoke compose-config compose-up compose-down compose-logs
 
 help: ## Показать доступные команды
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "%-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -50,6 +50,8 @@ release-check: lock-check lint format-check openapi-check migration-sql-check co
 
 release-2-check: release-check frontend-check ## Выполнить все статические проверки и тесты Release 2
 
+release-3-check: release-2-check smoke-ai-fake ## Выполнить автоматические проверки Release 3 без внешнего Ollama
+
 frontend-sync: ## Установить или обновить зависимости Frontend и lock-файл
 	npm --prefix frontend install
 
@@ -70,6 +72,13 @@ smoke-crud: ## Проверить CRUD на запущенном Backend и уд
 
 smoke-reviews: ## Проверить Review API на запущенном Backend и удалить тестовые данные
 	uv run python -m scripts.smoke_reviews
+
+smoke-ai-fake: ## Проверить все AI-сценарии с детерминированным fake-провайдером
+	uv run python -m scripts.smoke_ai_fake
+
+smoke-ai-live: ## Проверить все AI-сценарии с настоящим Ollama (opt-in)
+	@test "$${RUN_LIVE_AI_SMOKE:-0}" = "1" || (echo "Добавьте RUN_LIVE_AI_SMOKE=1 для запуска настоящей модели."; exit 2)
+	uv run python -m scripts.smoke_ai_live
 
 smoke-frontend: ## Проверить production Frontend, SPA-маршруты и API proxy
 	uv run python -m scripts.smoke_frontend

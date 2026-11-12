@@ -1,10 +1,12 @@
 import json
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
 from backend.app.ai.models import AnswerCorrectness
 from backend.app.cards.models import CardDifficulty
+
+from .language import require_russian_text
 
 PROMPT_VERSION = "answer-evaluator-v2-ru"
 EvaluationPoint = Annotated[
@@ -65,6 +67,10 @@ class AnswerEvaluationOutput(BaseModel):
         min_length=1,
         max_length=5000,
         description="Следующий учебный шаг на русском языке.",
+    )
+
+    _require_russian_prose = field_validator("feedback", "recommendation")(
+        require_russian_text
     )
 
 
