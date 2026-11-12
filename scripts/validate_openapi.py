@@ -46,6 +46,7 @@ EXPECTED_OPERATIONS = {
     ("/statistics/overview", "get"),
     ("/statistics/topics", "get"),
     ("/statistics/activity", "get"),
+    ("/adaptive/topics", "get"),
     ("/ai/providers", "get"),
     ("/ai/usage", "get"),
     ("/ai/evaluate-answer", "post"),

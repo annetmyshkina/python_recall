@@ -18,6 +18,8 @@
 - [ADR-004](adr/ADR-004-ai-architecture.md) — архитектура AI-модуля Release 3.
 - [ADR-005](adr/ADR-005-adaptive-learning-architecture.md) — границы
   адаптивного обучения Release 4.
+- [ADR-006](adr/ADR-006-learning-signals.md) — детерминированные правила
+  определения слабых тем.
 
 ## Архитектурные границы
 

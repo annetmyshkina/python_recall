@@ -13,6 +13,7 @@ tags:
   - name: Cards
   - name: Reviews
   - name: Statistics
+  - name: Adaptive Learning
   - name: AI
   - name: Health
 
@@ -839,6 +840,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActivityStatistics"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+
+  /adaptive/topics:
+    get:
+      tags: [Adaptive Learning]
+      operationId: list_topic_learning_signals
+      summary: List explainable learning signals for topics
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: category_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/LearningStatus"
+        - name: period_days
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 7
+            maximum: 365
+            default: 30
+      responses:
+        "200":
+          description: Paginated explainable learning signals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicLearningSignalsPage"
         "400":
           $ref: "#/components/responses/BadRequest"
         "422":
@@ -2517,6 +2561,125 @@ components:
           maxItems: 366
           items:
             $ref: "#/components/schemas/ActivityDay"
+
+    LearningStatus:
+      type: string
+      enum: [insufficient_data, stable, needs_attention]
+
+    LearningReason:
+      type: string
+      enum:
+        - no_active_cards
+        - insufficient_history
+        - frequent_again
+        - frequent_hard
+        - low_ai_completeness
+        - overdue_backlog
+        - long_inactivity
+
+    TopicLearningSignals:
+      type: object
+      additionalProperties: false
+      required:
+        - topic
+        - category_name
+        - status
+        - reasons
+        - active_cards
+        - overdue_cards
+        - overdue_rate
+        - reviews
+        - again_reviews
+        - hard_reviews
+        - successful_reviews
+        - success_rate
+        - again_rate
+        - hard_rate
+        - ai_evaluations
+        - average_ai_score
+        - average_ai_completeness
+        - last_reviewed_at
+      properties:
+        topic:
+          $ref: "#/components/schemas/Topic"
+        category_name:
+          type: string
+        status:
+          $ref: "#/components/schemas/LearningStatus"
+        reasons:
+          type: array
+          items:
+            $ref: "#/components/schemas/LearningReason"
+        active_cards:
+          type: integer
+          minimum: 0
+        overdue_cards:
+          type: integer
+          minimum: 0
+        overdue_rate:
+          $ref: "#/components/schemas/SuccessRate"
+        reviews:
+          type: integer
+          minimum: 0
+        again_reviews:
+          type: integer
+          minimum: 0
+        hard_reviews:
+          type: integer
+          minimum: 0
+        successful_reviews:
+          type: integer
+          minimum: 0
+        success_rate:
+          $ref: "#/components/schemas/SuccessRate"
+        again_rate:
+          $ref: "#/components/schemas/SuccessRate"
+        hard_rate:
+          $ref: "#/components/schemas/SuccessRate"
+        ai_evaluations:
+          type: integer
+          minimum: 0
+        average_ai_score:
+          type: [number, "null"]
+          minimum: 0
+          maximum: 100
+        average_ai_completeness:
+          type: [number, "null"]
+          minimum: 0
+          maximum: 100
+        last_reviewed_at:
+          type: [string, "null"]
+          format: date-time
+
+    TopicLearningSignalsPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - pagination
+        - period_days
+        - period_start
+        - timezone
+        - generated_at
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopicLearningSignals"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+        period_days:
+          type: integer
+          minimum: 7
+          maximum: 365
+        period_start:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+        generated_at:
+          type: string
+          format: date-time
 
     Health:
       type: object

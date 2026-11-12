@@ -1,9 +1,9 @@
 # Python Recall REST API
 
-- Статус: реализованный контракт Release 1–2 и этапа 3.1
+- Статус: реализованный контракт Release 1–4.1
 - Версия API: v1
-- Дата: 2026-11-09
-- Объём: Core API и диагностика локального AI-провайдера
+- Дата: 2026-11-12
+- Объём: Core API, локальный AI и детерминированные учебные сигналы
 
 ## Назначение
 
@@ -603,8 +603,26 @@ Idempotency-Replayed: true
 Ответ содержит `timezone` и элементы с `date`, `reviews`, `successful_reviews`,
 `success_rate`.
 
-`/statistics/weak-areas` появится вместе с формальным определением слабой области
-в Release 4 и не входит в OpenAPI Release 1.
+## Adaptive Learning signals
+
+`GET /adaptive/topics` возвращает объяснимые учебные сигналы по темам. Endpoint
+не вызывает AI, не сохраняет производные данные и не меняет SM-2.
+
+Поддерживаемые query-параметры:
+
+- `page`, `limit` — общая пагинация;
+- `category_id` — фильтр категории;
+- `status` — `insufficient_data`, `stable` или `needs_attention`;
+- `period_days` — от 7 до 365 локальных календарных дней, по умолчанию 30.
+
+Ответ содержит границы периода, timezone, исходные счётчики повторений,
+просроченных карточек и AI-оценок, производные доли, статус и все причины этого
+статуса. Архивные карточки и связанная с ними история не входят в текущий план.
+
+Достаточной считается история минимум из трёх подтверждённых повторений или
+трёх AI-оценок за период. Точные пороги `frequent_again`, `frequent_hard`,
+`low_ai_completeness`, `overdue_backlog` и `long_inactivity` определены в
+[ADR-006](adr/ADR-006-learning-signals.md).
 
 ## AI provider diagnostics
 

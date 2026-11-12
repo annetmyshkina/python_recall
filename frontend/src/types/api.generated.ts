@@ -319,6 +319,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/adaptive/topics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List explainable learning signals for topics */
+        get: operations["list_topic_learning_signals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ai/providers": {
         parameters: {
             query?: never;
@@ -1073,6 +1090,41 @@ export interface components {
         ActivityStatistics: {
             timezone: string;
             items: components["schemas"]["ActivityDay"][];
+        };
+        /** @enum {string} */
+        LearningStatus: "insufficient_data" | "stable" | "needs_attention";
+        /** @enum {string} */
+        LearningReason: "no_active_cards" | "insufficient_history" | "frequent_again" | "frequent_hard" | "low_ai_completeness" | "overdue_backlog" | "long_inactivity";
+        TopicLearningSignals: {
+            topic: components["schemas"]["Topic"];
+            category_name: string;
+            status: components["schemas"]["LearningStatus"];
+            reasons: components["schemas"]["LearningReason"][];
+            active_cards: number;
+            overdue_cards: number;
+            overdue_rate: components["schemas"]["SuccessRate"];
+            reviews: number;
+            again_reviews: number;
+            hard_reviews: number;
+            successful_reviews: number;
+            success_rate: components["schemas"]["SuccessRate"];
+            again_rate: components["schemas"]["SuccessRate"];
+            hard_rate: components["schemas"]["SuccessRate"];
+            ai_evaluations: number;
+            average_ai_score: number | null;
+            average_ai_completeness: number | null;
+            /** Format: date-time */
+            last_reviewed_at: string | null;
+        };
+        TopicLearningSignalsPage: {
+            items: components["schemas"]["TopicLearningSignals"][];
+            pagination: components["schemas"]["Pagination"];
+            period_days: number;
+            /** Format: date-time */
+            period_start: string;
+            timezone: string;
+            /** Format: date-time */
+            generated_at: string;
         };
         Health: {
             /** @constant */
@@ -2030,6 +2082,36 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActivityStatistics"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            422: components["responses"]["ValidationError"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["DatabaseUnavailable"];
+        };
+    };
+    list_topic_learning_signals: {
+        parameters: {
+            query?: {
+                page?: components["parameters"]["Page"];
+                limit?: components["parameters"]["Limit"];
+                category_id?: string;
+                status?: components["schemas"]["LearningStatus"];
+                period_days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated explainable learning signals */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TopicLearningSignalsPage"];
                 };
             };
             400: components["responses"]["BadRequest"];
